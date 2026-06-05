@@ -15,12 +15,6 @@ export class EvidenceSystem {
     const item = gameState.getEvidence(id);
     if (!item) return false;
 
-    // Unlock objectives
-    item.unlocks.forEach((objId) => {
-      gameState.activateObjective(objId);
-      eventBus.emit(GameEvents.OBJECTIVE_UPDATED, objId);
-    });
-
     eventBus.emit(GameEvents.EVIDENCE_COLLECTED, id);
     return true;
   }

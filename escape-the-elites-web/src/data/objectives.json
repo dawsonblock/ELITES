@@ -21,6 +21,7 @@
     "description": "A camera sweeps the service entrance. Time your movement carefully.",
     "status": "locked",
     "dependsOn": ["obj_enter_service_route"],
+    "evidenceGate": ["camera_note_001"],
     "isMain": false
   },
   {
@@ -55,6 +56,7 @@
     "description": "The security wing holds the path to the underground server room.",
     "status": "locked",
     "dependsOn": ["obj_find_office_evidence"],
+    "evidenceGate": ["security_feed_002"],
     "isMain": true
   },
   {

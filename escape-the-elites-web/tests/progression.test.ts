@@ -46,7 +46,7 @@ describe("Progression System", () => {
   });
 
   it("collecting server archive unlocks reach broadcast tower objective", () => {
-    // Complete chain up to download archive
+    // Complete chain up to escape lockdown
     gameState.completeObjective("obj_find_way_inside");
     gameState.completeObjective("obj_enter_service_route");
     gameState.completeObjective("obj_unlock_maintenance_door");
@@ -54,6 +54,7 @@ describe("Progression System", () => {
     gameState.completeObjective("obj_find_bunker_access");
     gameState.completeObjective("obj_enter_bunker");
     gameState.completeObjective("obj_download_archive");
+    gameState.completeObjective("obj_escape_lockdown");
     objectiveSystem.checkEvidenceGates();
 
     evidenceSystem.collect("server_archive_001");

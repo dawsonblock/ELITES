@@ -48,7 +48,7 @@
     "tags": ["guest_log", "timeline", "mansion"],
     "importance": 4,
     "requiredForBestEnding": true,
-    "unlocks": ["timeline_late_arrivals"],
+    "unlocks": [],
     "corroborates": ["security_feed_002"],
     "contentFile": "documents/guest_log_001.md",
     "discovered": false

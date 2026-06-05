@@ -1,5 +1,6 @@
 import type { SaveData } from "../types/save";
 import { gameState } from "./GameState";
+import { objectiveSystem } from "../systems/ObjectiveSystem";
 import { loadSave, saveGame, listSaveSlots, deleteSave } from "../utils/storage";
 
 export const CURRENT_VERSION = 1;
@@ -38,6 +39,7 @@ export function restoreSaveData(data: SaveData): boolean {
   gameState.setAlert(data.alertState as any);
   Object.entries(data.endingFlags).forEach(([k, v]) => gameState.setEndingFlag(k, v));
   if (data.settingsSnapshot) gameState.setSettings(data.settingsSnapshot);
+  objectiveSystem.checkEvidenceGates();
   return true;
 }
 
