@@ -1,0 +1,42 @@
+export const GameConfig = {
+  player: {
+    walkSpeed: 2.8,
+    sprintSpeed: 5.2,
+    crouchSpeed: 1.4,
+    lookSensitivity: 0.12,
+    controllerSensitivity: 1.8,
+    height: 1.7,
+    crouchHeight: 1.0,
+    radius: 0.25,
+    headBobAmount: 0.04,
+    headBobFrequency: 12,
+    fovBase: 75,
+    fovSprint: 82,
+    fovCrouch: 70,
+    fovLerpSpeed: 4,
+    smoothLookDamping: 0.15,
+  },
+  camera: {
+    fov: 75,
+    nearClip: 0.05,
+    farClip: 250,
+  },
+  interaction: {
+    rayLength: 3.0,
+    holdTimeMs: 500,
+  },
+  stealth: {
+    cameraSweepSpeed: 0.4,
+    cameraDetectionRange: 14,
+    cameraConeAngle: 50,
+    guardVisionRange: 12,
+    guardHearingRange: 7,
+    guardConeAngle: 65,
+    detectionDecayRate: 10,
+    alertCooldownSeconds: 5,
+  },
+  scenes: {
+    fogDensity: 0.025,
+    ambientIntensity: 0.12,
+  },
+} as const;

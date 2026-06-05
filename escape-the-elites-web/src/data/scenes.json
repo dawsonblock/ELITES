@@ -1,0 +1,61 @@
+[
+  {
+    "id": "dock",
+    "name": "Dock",
+    "description": "A storm-lashed dock on the island's southern edge.",
+    "purpose": "Teach movement, flashlight, interaction.",
+    "tone": "Isolation",
+    "spawnPosition": [0, 1.7, 5],
+    "lightingPreset": "storm",
+    "nextScene": "service_entrance"
+  },
+  {
+    "id": "service_entrance",
+    "name": "Service Entrance",
+    "description": "A maintenance corridor leading into the lower mansion.",
+    "purpose": "Teach stealth and camera avoidance.",
+    "tone": "The island is still active.",
+    "spawnPosition": [0, 1.7, 8],
+    "lightingPreset": "mansion",
+    "nextScene": "mansion_office"
+  },
+  {
+    "id": "mansion_office",
+    "name": "Mansion Office",
+    "description": "A private office with filing cabinets and a terminal.",
+    "purpose": "Introduce evidence board and institutional cover.",
+    "tone": "Luxury hiding logistics.",
+    "spawnPosition": [0, 1.7, 4],
+    "lightingPreset": "mansion",
+    "nextScene": "security_wing"
+  },
+  {
+    "id": "security_wing",
+    "name": "Security Wing",
+    "description": "A monitor-filled room with archive terminals.",
+    "purpose": "Reveal surveillance scale.",
+    "tone": "You are being watched.",
+    "spawnPosition": [0, 1.7, 6],
+    "lightingPreset": "security",
+    "nextScene": "bunker_server_room"
+  },
+  {
+    "id": "bunker_server_room",
+    "name": "Bunker Server Room",
+    "description": "Underground server racks and a download console.",
+    "purpose": "Main evidence download. Triggers lockdown.",
+    "tone": "The hidden system is real.",
+    "spawnPosition": [0, 1.7, 6],
+    "lightingPreset": "bunker",
+    "nextScene": "broadcast_tower"
+  },
+  {
+    "id": "broadcast_tower",
+    "name": "Broadcast Tower",
+    "description": "A storm-battered tower with an uplink console.",
+    "purpose": "Final upload and ending.",
+    "tone": "Cold release.",
+    "spawnPosition": [0, 1.7, 3],
+    "lightingPreset": "tower"
+  }
+]
