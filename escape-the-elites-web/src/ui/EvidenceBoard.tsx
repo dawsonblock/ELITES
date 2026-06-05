@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React from "react";
 import { gameState } from "../game/GameState";
 import type { EvidenceItem } from "../types/evidence";
 
@@ -25,12 +25,9 @@ function broadcastReadiness(collected: EvidenceItem[]): number {
 }
 
 export const EvidenceBoard: React.FC<Props> = ({ open, onClose, onViewEvidence }) => {
-  const collected = useMemo(() => gameState.allEvidence().filter((e) => gameState.hasEvidence(e.id)), []);
-  const readiness = useMemo(() => broadcastReadiness(collected), [collected]);
-  const missing = useMemo(
-    () => gameState.allEvidence().filter((e) => !gameState.hasEvidence(e.id) && e.requiredForBestEnding),
-    [collected]
-  );
+  const collected = gameState.allEvidence().filter((e) => gameState.hasEvidence(e.id));
+  const readiness = broadcastReadiness(collected);
+  const missing = gameState.allEvidence().filter((e) => !gameState.hasEvidence(e.id) && e.requiredForBestEnding);
 
   if (!open) return null;
 

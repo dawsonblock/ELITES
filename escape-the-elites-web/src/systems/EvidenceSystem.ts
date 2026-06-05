@@ -6,7 +6,8 @@ import type { EvidenceItem } from "../types/evidence";
 
 export class EvidenceSystem {
   init() {
-    gameState.registerEvidence(evidenceJson as EvidenceItem[]);
+    const cloned = JSON.parse(JSON.stringify(evidenceJson)) as EvidenceItem[];
+    gameState.registerEvidence(cloned);
   }
 
   collect(id: string): boolean {

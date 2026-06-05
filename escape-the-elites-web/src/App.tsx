@@ -195,6 +195,10 @@ export default function App() {
     gameState.lockdown = false;
     audioSystem.init();
     audioSystem.resume();
+    if (gameRef.current) {
+      gameRef.current.dispose();
+      gameRef.current = null;
+    }
     // Reset for fresh play in vertical slice
     setTimeout(() => {
       initGame();

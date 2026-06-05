@@ -160,6 +160,8 @@ class GameStateManager {
   }
 
   resetProgress() {
+    this._evidence.clear();
+    this._objectives.clear();
     this._collectedEvidence.clear();
     this._completedObjectives.clear();
     this._activeObjectives.clear();

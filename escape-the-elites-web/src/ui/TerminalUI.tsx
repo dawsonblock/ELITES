@@ -1,8 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { gameState } from "../game/GameState";
 import { eventBus } from "../utils/eventBus";
 import { GameEvents } from "../game/GameEvents";
 import { audioSystem } from "../systems/AudioSystem";
+import { evidenceSystem } from "../systems/EvidenceSystem";
+import { objectiveSystem } from "../systems/ObjectiveSystem";
 import type { TerminalDefinition, TerminalCommand } from "../types/terminal";
 import terminalsJson from "../data/terminals.json";
 
@@ -23,6 +25,7 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
   const [activeCmd, setActiveCmd] = useState(0);
   const [unlocked, setUnlocked] = useState(false);
   const [unlockInput, setUnlockInput] = useState("");
+  const downloadEvidenceIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open || !terminalId) return;
@@ -77,6 +80,12 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
           addLine("> DOWNLOAD COMPLETE", "success");
           addLine("> LOCKDOWN SEQUENCE INITIATED", "error");
           addLine("", "system");
+          const eid = downloadEvidenceIdRef.current;
+          if (eid) {
+            evidenceSystem.collect(eid);
+            objectiveSystem.checkEvidenceGates();
+            downloadEvidenceIdRef.current = null;
+          }
           eventBus.emit(GameEvents.DOWNLOAD_COMPLETED);
           eventBus.emit(GameEvents.LOCKDOWN_TRIGGERED);
           gameState.lockdown = true;
@@ -139,8 +148,8 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     if (cmd.action === "collect_evidence") {
       const id = (cmd.params as any)?.evidenceId as string;
       if (id) {
-        gameState.collectEvidence(id);
-        eventBus.emit(GameEvents.EVIDENCE_COLLECTED, id);
+        evidenceSystem.collect(id);
+        objectiveSystem.checkEvidenceGates();
         addLine(`> FILE EXTRACTED: ${gameState.getEvidence(id)?.title || id}`, "success");
         addLine("", "system");
       }
@@ -161,6 +170,7 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
         addLine("", "system");
       }
     } else if (cmd.action === "start_download") {
+      downloadEvidenceIdRef.current = ((cmd.params as any)?.evidenceId as string) || null;
       setDownloading(true);
       addLine("> INITIATING ENCRYPTED DOWNLOAD...", "warn");
       addLine("> ETA: 30 SECONDS", "system");

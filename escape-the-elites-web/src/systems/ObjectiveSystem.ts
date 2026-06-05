@@ -6,7 +6,8 @@ import type { Objective } from "../types/objective";
 
 export class ObjectiveSystem {
   init() {
-    gameState.registerObjectives(objectivesJson as Objective[]);
+    const cloned = JSON.parse(JSON.stringify(objectivesJson)) as Objective[];
+    gameState.registerObjectives(cloned);
     // Activate first objective
     gameState.activateObjective("obj_find_way_inside");
   }
