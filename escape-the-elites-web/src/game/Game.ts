@@ -29,11 +29,12 @@ export class Game {
   private sceneRoot: pc.Entity | null = null;
   private downloadTimer = new Timer();
   private walls: AABB[] = [];
-  private doors: { entity: pc.Entity; aabb: AABB; open: boolean; targetOpen: boolean; speed: number; meta: Record<string, unknown>; basePos: pc.Vec3 }[] = [];
+  private doors: { id: string; entity: pc.Entity; aabb: AABB; locked: boolean; targetOpen: boolean; progress: number; speed: number; meta: Record<string, unknown>; basePos: pc.Vec3 }[] = [];
   private moveTime = 0;
   private targetYaw = 0;
   private targetPitch = 0;
   private currentFov: number = GameConfig.camera.fov;
+  private unsubDoorListener: (() => void) | null = null;
 
   constructor() {}
 
@@ -56,6 +57,20 @@ export class Game {
     this.loadScene("dock");
 
     app.on("update", (dt) => this.update(dt));
+
+    this.unsubDoorListener = eventBus.on(GameEvents.DOOR_UNLOCKED, (doorId) => {
+      const door = this.doors.find((d) => d.id === doorId);
+      if (door) {
+        door.locked = false;
+        door.targetOpen = true;
+        audioSystem.playDoorOpen();
+        // Sync interactable metadata so App.tsx sees the door as unlocked
+        const ent = door.entity as any;
+        if (ent.__interactable && ent.__interactable.meta) {
+          ent.__interactable.meta.locked = false;
+        }
+      }
+    });
 
     this.callbacks.onReady?.();
   }
@@ -117,6 +132,18 @@ export class Game {
     this.sceneRoot = root;
 
     this.buildScene(sceneId, root);
+
+    const spawns = {
+      dock: [0, 1.7, 5], service_entrance: [0, 1.7, 8], mansion_office: [0, 1.7, 4],
+      security_wing: [0, 1.7, 6], bunker_server_room: [0, 1.7, 6], broadcast_tower: [0, 1.7, 3],
+    } as Record<string, [number, number, number]>;
+    const spawn = spawns[sceneId];
+    if (spawn && this.playerEntity) {
+      this.playerEntity.setPosition(spawn[0], GameConfig.player.height / 2, spawn[2]);
+      this.targetYaw = 0;
+      this.targetPitch = 0;
+      if (this.cameraEntity) this.cameraEntity.setLocalEulerAngles(0, 0, 0);
+    }
 
     // Ambient audio per scene
     const ambientMap: Record<string, Parameters<typeof audioSystem.startAmbient>[0]> = {
@@ -233,10 +260,15 @@ export class Game {
     root.addChild(box);
 
     const aabb = entityToAABB({ x: pos[0], y: pos[1], z: pos[2] }, { x: scale[0], y: scale[1], z: scale[2] });
-    const doorObj = { entity: box, aabb, open: false, targetOpen: false, speed: 2, meta, basePos: new pc.Vec3(...pos) };
+    const isLocked = !!meta.locked;
+    const doorId = meta.doorId as string;
+    const doorObj = { id: doorId, entity: box, aabb, locked: isLocked, targetOpen: false, progress: 0, speed: 2, meta, basePos: new pc.Vec3(...pos) };
     this.doors.push(doorObj);
     (box as any).__door = doorObj;
-    this.addInteractable(box, "door", meta.locked ? "Locked Door" : "Door", meta);
+    if (isLocked) {
+      this.walls.push(aabb);
+    }
+    this.addInteractable(box, "door", isLocked ? "Locked Door" : "Door", { ...meta, locked: isLocked });
     return box;
   }
 
@@ -518,23 +550,46 @@ export class Game {
 
   private updateDoors(dt: number) {
     for (const door of this.doors) {
-      if (door.open !== door.targetOpen) {
-        const dir = door.targetOpen ? 1 : -1;
-        const progress = door.open ? 1 : 0;
-        const newProgress = clamp(progress + dir * door.speed * dt, 0, 1);
-        door.open = newProgress >= 1;
-        if (!door.open && newProgress <= 0) door.open = false;
-        // Slide door sideways (Z-aligned doors slide in X)
+      const target = door.targetOpen ? 1 : 0;
+      if (Math.abs(door.progress - target) > 0.001) {
+        const dir = target > door.progress ? 1 : -1;
+        door.progress = clamp(door.progress + dir * door.speed * dt, 0, 1);
         const bx = door.basePos.x;
-        door.entity.setPosition(bx + (door.targetOpen ? 1.5 : 0) * newProgress, door.basePos.y, door.basePos.z);
-        // Update collision only on state transition
+        door.entity.setPosition(bx + 1.5 * door.progress, door.basePos.y, door.basePos.z);
+        // Sync collision with animation
         const idx = this.walls.indexOf(door.aabb);
-        if (door.targetOpen && idx >= 0) {
+        if (door.progress > 0.5 && idx >= 0 && door.targetOpen) {
           this.walls.splice(idx, 1);
-        } else if (!door.targetOpen && idx < 0) {
+        } else if (door.progress < 0.5 && idx < 0 && !door.targetOpen) {
           this.walls.push(door.aabb);
         }
       }
+    }
+  }
+
+  private handleSceneTransition(targetScene: string) {
+    const completions: Record<string, { complete?: string[]; activate?: string[] }> = {
+      service_entrance: { complete: ["obj_find_way_inside"], activate: ["obj_enter_service_route", "obj_avoid_first_camera", "obj_unlock_maintenance_door"] },
+      mansion_office: { complete: ["obj_enter_service_route", "obj_unlock_maintenance_door"], activate: ["obj_find_office_evidence"] },
+      security_wing: { complete: ["obj_find_office_evidence"], activate: ["obj_find_bunker_access", "obj_enter_bunker"] },
+      bunker_server_room: { complete: ["obj_enter_bunker"], activate: ["obj_download_archive"] },
+      broadcast_tower: { complete: ["obj_escape_lockdown", "obj_reach_broadcast_tower"], activate: ["obj_upload_broadcast"] },
+    };
+    const actions = completions[targetScene];
+    if (actions) {
+      actions.complete?.forEach((id) => {
+        if (gameState.completeObjective(id)) {
+          eventBus.emit(GameEvents.OBJECTIVE_UPDATED);
+        }
+      });
+      actions.activate?.forEach((id) => {
+        const obj = gameState.getObjective(id);
+        if (!obj || obj.status !== "locked") return;
+        const evidenceMet = !obj.evidenceGate || obj.evidenceGate.every((eid) => gameState.hasEvidence(eid));
+        if (evidenceMet && gameState.activateObjective(id)) {
+          eventBus.emit(GameEvents.OBJECTIVE_UPDATED);
+        }
+      });
     }
   }
 
@@ -552,6 +607,7 @@ export class Game {
         ppos.z > cpos.z - cscale.z / 2 && ppos.z < cpos.z + cscale.z / 2
       ) {
         this.callbacks.onSceneEnter?.(trig.targetScene, trig.sceneName);
+        this.handleSceneTransition(trig.targetScene);
         this.loadScene(trig.targetScene);
       }
     });
@@ -691,7 +747,34 @@ export class Game {
     return gameState.playtimeSeconds;
   }
 
+  getPlayerSnapshot() {
+    const pos = this.playerEntity?.getPosition();
+    const rot = this.cameraEntity?.getLocalEulerAngles();
+    return {
+      sceneId: this.currentSceneId,
+      position: pos ? ([pos.x, pos.y, pos.z] as [number, number, number]) : ([0, 1.7, 0] as [number, number, number]),
+      yaw: rot?.y ?? 0,
+      pitch: rot?.x ?? 0,
+    };
+  }
+
+  loadPlayerSnapshot(snapshot: { sceneId: string; position: [number, number, number]; yaw: number; pitch: number }) {
+    if (snapshot.sceneId !== this.currentSceneId) {
+      this.loadScene(snapshot.sceneId);
+    }
+    if (this.playerEntity) {
+      this.playerEntity.setPosition(snapshot.position[0], snapshot.position[1], snapshot.position[2]);
+    }
+    this.targetYaw = snapshot.yaw;
+    this.targetPitch = snapshot.pitch;
+    if (this.cameraEntity) {
+      this.cameraEntity.setLocalEulerAngles(snapshot.pitch, snapshot.yaw, 0);
+    }
+  }
+
   dispose() {
+    this.unsubDoorListener?.();
+    this.unsubDoorListener = null;
     if (this.app) {
       this.app.destroy();
       this.app = null;

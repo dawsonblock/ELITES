@@ -21,6 +21,8 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [booting, setBooting] = useState(false);
   const [activeCmd, setActiveCmd] = useState(0);
+  const [unlocked, setUnlocked] = useState(false);
+  const [unlockInput, setUnlockInput] = useState("");
 
   useEffect(() => {
     if (!open || !terminalId) return;
@@ -31,16 +33,20 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     setLines([]);
     setDownloading(false);
     setDownloadProgress(0);
+    setUnlockInput("");
+
+    // Check if this terminal was previously unlocked (persisted in gameState)
+    const wasUnlocked = def ? !def.locked || gameState.isTerminalUnlocked(def.id) : false;
+    setUnlocked(wasUnlocked);
 
     audioSystem.resume();
     audioSystem.playTerminalBoot();
 
-    // Boot sequence
     const bootLines: LineItem[] = [
       { text: "BIOS v2.14.6  [OK]", type: "system" },
       { text: "Memory Test     [OK]", type: "system" },
       { text: `Network: ${def?.name || "UNKNOWN"}`, type: "system" },
-      { text: `STATUS: ${def?.locked ? "RESTRICTED" : "ONLINE"}`, type: def?.locked ? "warn" : "success" },
+      { text: `STATUS: ${def?.locked && !wasUnlocked ? "RESTRICTED" : "ONLINE"}`, type: def?.locked && !wasUnlocked ? "warn" : "success" },
       { text: "", type: "system" },
       { text: "> AWAITING INPUT...", type: "system" },
       { text: "", type: "system" },
@@ -88,7 +94,45 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     setLines((prev) => [...prev, { text, type }]);
   }, []);
 
+  const tryUnlock = () => {
+    if (!term) return;
+    const code = term.unlockCode;
+    if (code && unlockInput.trim().toLowerCase() === code.toLowerCase()) {
+      setUnlocked(true);
+      gameState.unlockTerminal(term.id);
+      addLine("> ACCESS GRANTED", "success");
+      audioSystem.playTone(880, 0.2, "sine", "ui", 0.2);
+      return;
+    }
+    // Check if any command has requiresEvidence that we have
+    const hasKeyEvidence = term.commands.some((cmd) => {
+      const req = cmd.requiresEvidence || [];
+      return req.length > 0 && req.every((id) => gameState.hasEvidence(id));
+    });
+    if (hasKeyEvidence) {
+      setUnlocked(true);
+      gameState.unlockTerminal(term.id);
+      addLine("> ACCESS GRANTED", "success");
+      audioSystem.playTone(880, 0.2, "sine", "ui", 0.2);
+      return;
+    }
+    addLine("> ACCESS DENIED", "error");
+    audioSystem.playTone(200, 0.3, "square", "ui", 0.15);
+  };
+
+  const canRunCommand = (cmd: TerminalCommand): boolean => {
+    const req = cmd.requiresEvidence || [];
+    if (req.length > 0 && !req.every((id) => gameState.hasEvidence(id))) return false;
+    return true;
+  };
+
   const runCommand = (cmd: TerminalCommand) => {
+    if (!canRunCommand(cmd)) {
+      audioSystem.playTone(200, 0.2, "square", "ui", 0.1);
+      addLine("> ACCESS DENIED: MISSING REQUIRED CREDENTIALS", "error");
+      addLine("", "system");
+      return;
+    }
     audioSystem.playClick("ui");
     addLine(`> ${cmd.label}`, "system");
 
@@ -142,10 +186,17 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     }
   };
 
-  // Keyboard navigation for commands
+  // Keyboard navigation
   useEffect(() => {
     if (!open || !term || booting || downloading) return;
     const onKey = (e: KeyboardEvent) => {
+      if (!unlocked) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          tryUnlock();
+        }
+        return;
+      }
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setActiveCmd((i) => (i + 1) % term.commands.length);
@@ -159,7 +210,7 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, term, booting, downloading, activeCmd]);
+  }, [open, term, booting, downloading, activeCmd, unlocked, unlockInput]);
 
   if (!open || !term) return null;
 
@@ -171,6 +222,8 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
       default: return "#a0a0b0";
     }
   };
+
+  const isLocked = term.locked && !unlocked;
 
   return (
     <div
@@ -186,8 +239,8 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div style={{ color: term.locked ? "#ef4444" : "#22c55e", fontWeight: 700 }}>
-          {term.name} {term.locked && "[LOCKED]"}
+        <div style={{ color: isLocked ? "#ef4444" : "#22c55e", fontWeight: 700 }}>
+          {term.name} {isLocked && "[LOCKED]"}
         </div>
         <button className="ui-button secondary" onClick={() => { audioSystem.playClick("ui"); onClose(); }}>Disconnect</button>
       </div>
@@ -220,25 +273,56 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
-        {term.commands.map((cmd, i) => (
-          <button
-            key={cmd.id}
-            className="ui-button"
+      {isLocked && (
+        <div style={{ display: "flex", gap: 8, marginTop: 16, alignItems: "center" }}>
+          <span style={{ color: "#a0a0b0", fontSize: "0.8rem" }}>Access Code:</span>
+          <input
+            type="text"
+            value={unlockInput}
+            onChange={(e) => setUnlockInput(e.target.value)}
+            placeholder="ENTER CODE"
             style={{
-              fontSize: "0.8rem",
-              padding: "8px 14px",
-              outline: i === activeCmd ? "2px solid #3b82f6" : "none",
-              opacity: downloading ? 0.5 : 1,
+              background: "rgba(0,0,0,0.5)",
+              border: "1px solid #1f1f28",
+              borderRadius: 4,
+              padding: "6px 10px",
+              color: "#e8e8ec",
+              fontFamily: "inherit",
+              fontSize: "0.875rem",
+              flex: 1,
             }}
-            onClick={() => runCommand(cmd)}
-            disabled={downloading}
-            onMouseEnter={() => setActiveCmd(i)}
-          >
-            {cmd.label}
-          </button>
-        ))}
-      </div>
+            autoFocus
+          />
+          <button className="ui-button" style={{ fontSize: "0.8rem", padding: "8px 14px" }} onClick={tryUnlock}>Unlock</button>
+        </div>
+      )}
+
+      {!isLocked && (
+        <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+          {term.commands.map((cmd, i) => {
+            const canRun = canRunCommand(cmd);
+            return (
+              <button
+                key={cmd.id}
+                className="ui-button"
+                style={{
+                  fontSize: "0.8rem",
+                  padding: "8px 14px",
+                  outline: i === activeCmd ? "2px solid #3b82f6" : "none",
+                  opacity: downloading || !canRun ? 0.4 : 1,
+                  cursor: canRun ? "pointer" : "not-allowed",
+                }}
+                onClick={() => canRun && runCommand(cmd)}
+                disabled={downloading || !canRun}
+                onMouseEnter={() => setActiveCmd(i)}
+                title={!canRun ? "Missing required credentials" : undefined}
+              >
+                {cmd.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

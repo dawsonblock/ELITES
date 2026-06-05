@@ -31,7 +31,7 @@
         "id": "cmd_disable_cam_01",
         "label": "Disable Camera 01",
         "action": "disable_camera",
-        "params": { "cameraId": "cam_security_01" }
+        "params": { "cameraId": "cam_service_01" }
       },
       {
         "id": "cmd_download_security_feed",

@@ -131,7 +131,7 @@ export default function App() {
         const needsKey = d.meta.needsKey as string | undefined;
         const needsCode = d.meta.needsCode as string | undefined;
         const locked = d.meta.locked as boolean;
-        if (!locked) {
+        if (gameState.isDoorUnlocked(doorId) || !locked) {
           gameState.unlockDoor(doorId);
           eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
         } else if (needsKey && gameState.hasEvidence(needsKey)) {
@@ -188,6 +188,7 @@ export default function App() {
     setEvidenceBoardOpen(false);
     setTerminalOpen(false);
     setEnding(null);
+    gameState.resetProgress();
     gameState.paused = false;
     gameState.evidenceBoardOpen = false;
     gameState.terminalOpen = false;
@@ -217,6 +218,17 @@ export default function App() {
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden" }}>
+      <div
+        id="brightness-overlay"
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: "none",
+          background: "transparent",
+          transition: "background 0.3s ease",
+        }}
+      />
       <canvas
         ref={canvasRef}
         style={{
@@ -257,9 +269,8 @@ export default function App() {
             onResume={resumeGame}
             onSave={() => {
               if (gameRef.current) {
-                const pos: [number, number, number] = [0, 1.7, 0];
-                const rot: [number, number, number] = [0, 0, 0];
-                const data = buildSaveData(gameRef.current.getSceneId(), "manual", pos, rot);
+                const snap = gameRef.current.getPlayerSnapshot();
+                const data = buildSaveData(snap.sceneId, "manual", snap.position, [snap.pitch, snap.yaw, 0]);
                 saveGame("ManualSave1", data);
               }
             }}
@@ -267,7 +278,12 @@ export default function App() {
               const data = loadSave("ManualSave1");
               if (data && gameRef.current) {
                 restoreSaveData(data);
-                gameRef.current.loadScene(data.sceneId);
+                gameRef.current.loadPlayerSnapshot({
+                  sceneId: data.sceneId,
+                  position: data.playerPosition,
+                  yaw: data.playerRotation[1],
+                  pitch: data.playerRotation[0],
+                });
                 setPaused(false);
                 gameState.paused = false;
                 inputManager.requestPointerLock(canvasRef.current!);

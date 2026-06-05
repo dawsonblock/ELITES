@@ -39,4 +39,4 @@ export const GameConfig = {
     fogDensity: 0.025,
     ambientIntensity: 0.12,
   },
-} as const;
+};

@@ -21,6 +21,7 @@ class GameStateManager {
   private _playtimeSeconds = 0;
   private _settings: Record<string, unknown> = {};
   private _endingFlags: Record<string, boolean> = {};
+  private _unlockedTerminals: Set<string> = new Set();
 
   get sceneId() { return this._sceneId; }
   set sceneId(v: string) { this._sceneId = v; }
@@ -148,6 +149,30 @@ class GameStateManager {
 
   setEndingFlag(key: string, value: boolean) {
     this._endingFlags[key] = value;
+  }
+
+  unlockTerminal(id: string) {
+    this._unlockedTerminals.add(id);
+  }
+
+  isTerminalUnlocked(id: string): boolean {
+    return this._unlockedTerminals.has(id);
+  }
+
+  resetProgress() {
+    this._collectedEvidence.clear();
+    this._completedObjectives.clear();
+    this._activeObjectives.clear();
+    this._unlockedDoors.clear();
+    this._disabledCameras.clear();
+    this._unlockedTerminals.clear();
+    this._detectionValue = 0;
+    this._detection = "hidden";
+    this._alert = "normal";
+    this._lockdown = false;
+    this._playtimeSeconds = 0;
+    this._endingFlags = {};
+    this._settings = {};
   }
 }
 
