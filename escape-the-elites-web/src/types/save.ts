@@ -11,8 +11,10 @@ export type SaveData = {
   unlockedDoorIds: string[];
   disabledCameraIds: string[];
   terminalStates: Record<string, unknown>;
+  unlockedTerminalIds: string[];
   alertState: string;
   alarmsTriggered: number;
+  lockdown: boolean;
   endingFlags: Record<string, boolean>;
   settingsSnapshot?: Record<string, unknown>;
   playtimeSeconds: number;

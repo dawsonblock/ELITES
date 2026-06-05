@@ -234,104 +234,57 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
 
   if (!open || !term) return null;
 
-  const lineColor = (type: LineItem["type"]) => {
-    switch (type) {
-      case "error": return "#ef4444";
-      case "success": return "#22c55e";
-      case "warn": return "#f59e0b";
-      default: return "#a0a0b0";
-    }
-  };
-
   const isLocked = term.locked && !unlocked;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: "rgba(3,3,6,0.95)",
-        zIndex: 70,
-        display: "flex",
-        flexDirection: "column",
-        padding: 32,
-        fontFamily: "'Courier New', monospace",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div style={{ color: isLocked ? "#ef4444" : "#22c55e", fontWeight: 700 }}>
+    <div className="terminal-overlay">
+      <div className="terminal-header">
+        <div className={`terminal-status ${isLocked ? "terminal-status-locked" : "terminal-status-unlocked"}`}>
           {term.name} {isLocked && "[LOCKED]"}
         </div>
         <button className="ui-button secondary" onClick={() => { audioSystem.playClick("ui"); onClose(); }}>Disconnect</button>
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          background: "rgba(0,0,0,0.5)",
-          border: "1px solid #1f1f28",
-          borderRadius: 6,
-          padding: 16,
-          fontSize: "0.875rem",
-          lineHeight: 1.6,
-        }}
-      >
+      <div className="terminal-content">
         {lines.map((line, i) => (
-          <div key={i} style={{ color: lineColor(line.type) }}>{line.text}</div>
+          <div key={i} className={`terminal-line terminal-line-${line.type}`}>{line.text}</div>
         ))}
         {downloading && (
-          <div style={{ marginTop: 8 }}>
-            <div style={{ width: "100%", height: 8, background: "#1f1f28", borderRadius: 4 }}>
-              <div style={{ width: `${downloadProgress}%`, height: "100%", background: "#ef4444", borderRadius: 4, transition: "width 0.3s" }} />
+          <div className="terminal-download">
+            <div className="terminal-progress-track">
+              <div className="terminal-progress-fill" style={{ width: `${downloadProgress}%` }} />
             </div>
-            <div style={{ fontSize: "0.75rem", color: "#6b6b7b", marginTop: 4 }}>Downloading archive... {downloadProgress}%</div>
+            <div className="terminal-progress-text">Downloading archive... {downloadProgress}%</div>
           </div>
         )}
         {booting && (
-          <div style={{ color: "#6b6b7b", fontSize: "0.8rem", marginTop: 4 }}>_</div>
+          <div className="terminal-cursor">_</div>
         )}
       </div>
 
       {isLocked && (
-        <div style={{ display: "flex", gap: 8, marginTop: 16, alignItems: "center" }}>
-          <span style={{ color: "#a0a0b0", fontSize: "0.8rem" }}>Access Code:</span>
+        <div className="terminal-unlock-row">
+          <span className="terminal-unlock-label">Access Code:</span>
           <input
             type="text"
             value={unlockInput}
             onChange={(e) => setUnlockInput(e.target.value)}
             placeholder="ENTER CODE"
-            style={{
-              background: "rgba(0,0,0,0.5)",
-              border: "1px solid #1f1f28",
-              borderRadius: 4,
-              padding: "6px 10px",
-              color: "#e8e8ec",
-              fontFamily: "inherit",
-              fontSize: "0.875rem",
-              flex: 1,
-            }}
+            className="terminal-unlock-input"
             autoFocus
           />
-          <button className="ui-button" style={{ fontSize: "0.8rem", padding: "8px 14px" }} onClick={tryUnlock}>Unlock</button>
+          <button className="ui-button terminal-command-btn" onClick={tryUnlock}>Unlock</button>
         </div>
       )}
 
       {!isLocked && (
-        <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+        <div className="terminal-commands">
           {term.commands.map((cmd, i) => {
             const canRun = canRunCommand(cmd);
             return (
               <button
                 key={cmd.id}
-                className="ui-button"
-                style={{
-                  fontSize: "0.8rem",
-                  padding: "8px 14px",
-                  outline: i === activeCmd ? "2px solid #3b82f6" : "none",
-                  opacity: downloading || !canRun ? 0.4 : 1,
-                  cursor: canRun ? "pointer" : "not-allowed",
-                }}
+                className={`ui-button terminal-command-btn ${i === activeCmd ? "active" : ""} ${downloading || !canRun ? "disabled" : ""}`}
                 onClick={() => canRun && runCommand(cmd)}
                 disabled={downloading || !canRun}
                 onMouseEnter={() => setActiveCmd(i)}

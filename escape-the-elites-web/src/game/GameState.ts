@@ -135,6 +135,18 @@ class GameStateManager {
     return this._disabledCameras.has(id);
   }
 
+  unlockedDoors(): string[] {
+    return Array.from(this._unlockedDoors);
+  }
+
+  disabledCameras(): string[] {
+    return Array.from(this._disabledCameras);
+  }
+
+  unlockedTerminals(): string[] {
+    return Array.from(this._unlockedTerminals);
+  }
+
   getSettings(): Record<string, unknown> {
     return { ...this._settings };
   }

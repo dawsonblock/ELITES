@@ -17,6 +17,7 @@ import { EndingScreen } from "./ui/EndingScreen";
 import { LoadingScreen } from "./ui/LoadingScreen";
 import { ScreenEffects } from "./ui/ScreenEffects";
 import { DocumentViewer } from "./ui/DocumentViewer";
+import { MobileControls } from "./ui/MobileControls";
 import { audioSystem } from "./systems/AudioSystem";
 import type { EndingType } from "./types/ending";
 import { buildSaveData, saveGame, loadSave, restoreSaveData } from "./game/SaveManager";
@@ -40,6 +41,7 @@ export default function App() {
   const [loadingScene, setLoadingScene] = useState<string | null>(null);
   const [sceneNote, setSceneNote] = useState<string | null>(null);
   const [viewingEvidence, setViewingEvidence] = useState<string | null>(null);
+  const [hasSave, setHasSave] = useState(() => !!loadSave("AutoSave"));
 
   const initGame = useCallback(() => {
     if (gameRef.current || !canvasRef.current) return;
@@ -212,7 +214,72 @@ export default function App() {
     inputManager.requestPointerLock(canvasRef.current!);
   };
 
+  const continueGame = () => {
+    const data = loadSave("AutoSave");
+    if (!data) return;
+    setScreen("game");
+    setPaused(false);
+    setEvidenceBoardOpen(false);
+    setTerminalOpen(false);
+    setEnding(null);
+    gameState.resetProgress();
+    gameState.paused = false;
+    gameState.evidenceBoardOpen = false;
+    gameState.terminalOpen = false;
+    gameState.lockdown = false;
+    audioSystem.init();
+    audioSystem.resume();
+    if (gameRef.current) {
+      gameRef.current.dispose();
+      gameRef.current = null;
+    }
+    setTimeout(() => {
+      if (!canvasRef.current) return;
+      evidenceSystem.init();
+      objectiveSystem.init();
+      restoreSaveData(data);
+      const game = new Game();
+      game.init(canvasRef.current);
+      game.setCallbacks({
+        onReady: () => {
+          inputManager.requestPointerLock(canvasRef.current!);
+        },
+        onSceneChange: (sceneId) => {
+          gameState.sceneId = sceneId;
+          setLoadingScene(sceneId);
+          setTimeout(() => setLoadingScene(null), 800);
+          eventBus.emit(GameEvents.SCENE_LOAD, sceneId);
+          // Auto-save on scene transition
+          const snap = game.getPlayerSnapshot();
+          const saveData = buildSaveData(snap.sceneId, "checkpoint", snap.position, [snap.pitch, snap.yaw, 0]);
+          saveGame("AutoSave", saveData);
+          setHasSave(true);
+        },
+        onInteractTarget: (target) => {
+          eventBus.emit(GameEvents.INTERACT_TARGET, target);
+        },
+        onSceneEnter: (_sceneId, sceneName) => {
+          setSceneNote(sceneName);
+        },
+      });
+      gameRef.current = game;
+      game.loadPlayerSnapshot({
+        sceneId: data.sceneId,
+        position: data.playerPosition,
+        yaw: data.playerRotation[1],
+        pitch: data.playerRotation[0],
+      });
+    }, 0);
+  };
+
   const quitToMenu = () => {
+    // Auto-save before quitting
+    if (gameRef.current && screen === "game") {
+      const snap = gameRef.current.getPlayerSnapshot();
+      const data = buildSaveData(snap.sceneId, "quit", snap.position, [snap.pitch, snap.yaw, 0]);
+      saveGame("AutoSave", data);
+      setHasSave(true);
+    }
     setScreen("menu");
     setPaused(false);
     gameState.paused = false;
@@ -221,38 +288,21 @@ export default function App() {
   };
 
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden" }}>
-      <div
-        id="brightness-overlay"
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 0,
-          pointerEvents: "none",
-          background: "transparent",
-          transition: "background 0.3s ease",
-        }}
-      />
+    <div className="app-root">
+      <div id="brightness-overlay" className="brightness-overlay" />
       <canvas
         ref={canvasRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: 1,
-          display: screen === "game" || screen === "ending" ? "block" : "none",
-        }}
+        className="game-canvas"
+        style={{ display: screen === "game" || screen === "ending" ? "block" : "none" }}
       />
 
       {screen === "menu" && (
         <MainMenu
           onStart={startGame}
-          onContinue={() => {}}
+          onContinue={continueGame}
           onSettings={() => setSettingsOpen(true)}
           onCredits={() => setCreditsOpen(true)}
-          hasSave={false}
+          hasSave={hasSave}
         />
       )}
 
@@ -268,6 +318,7 @@ export default function App() {
             onClose={() => setViewingEvidence(null)}
           />
           <TerminalUI open={terminalOpen} terminalId={activeTerminalId} onClose={() => { setTerminalOpen(false); gameState.terminalOpen = false; inputManager.requestPointerLock(canvasRef.current!); }} />
+          <MobileControls />
           <PauseMenu
             open={paused}
             onResume={resumeGame}
@@ -281,6 +332,8 @@ export default function App() {
             onLoad={() => {
               const data = loadSave("ManualSave1");
               if (data && gameRef.current) {
+                evidenceSystem.init();
+                objectiveSystem.init();
                 restoreSaveData(data);
                 gameRef.current.loadPlayerSnapshot({
                   sceneId: data.sceneId,

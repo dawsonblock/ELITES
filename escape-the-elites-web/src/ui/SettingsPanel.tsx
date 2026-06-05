@@ -61,57 +61,46 @@ export const SettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: "rgba(5,5,8,0.9)",
-        zIndex: 80,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div className="ui-panel" style={{ width: 400, maxWidth: "90vw" }}>
-        <h2 style={{ marginBottom: 20 }}>Settings</h2>
+    <div className="settings-overlay">
+      <div className="ui-panel settings-panel">
+        <h2 className="settings-title">Settings</h2>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.875rem" }}>
+        <div className="settings-row">
+          <label className="settings-label">
             <span>Mouse Sensitivity</span>
-            <span style={{ color: "#6b6b7b" }}>{sensitivity.toFixed(0)}%</span>
+            <span className="settings-value">{sensitivity.toFixed(0)}%</span>
           </label>
-          <input type="range" min={5} max={100} step={1} value={sensitivity} onChange={(e) => setSensitivity(Number(e.target.value))} style={{ width: "100%" }} />
+          <input type="range" min={5} max={100} step={1} value={sensitivity} onChange={(e) => setSensitivity(Number(e.target.value))} className="settings-range" />
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.875rem" }}>
+        <div className="settings-row">
+          <label className="settings-label">
             <span>Brightness</span>
-            <span style={{ color: "#6b6b7b" }}>{brightness}%</span>
+            <span className="settings-value">{brightness}%</span>
           </label>
-          <input type="range" min={10} max={150} step={1} value={brightness} onChange={(e) => setBrightness(Number(e.target.value))} style={{ width: "100%" }} />
+          <input type="range" min={10} max={150} step={1} value={brightness} onChange={(e) => setBrightness(Number(e.target.value))} className="settings-range" />
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.875rem" }}>
+        <div className="settings-row">
+          <label className="settings-label">
             <span>Master Volume</span>
-            <span style={{ color: "#6b6b7b" }}>{volume}%</span>
+            <span className="settings-value">{volume}%</span>
           </label>
-          <input type="range" min={0} max={100} step={1} value={volume} onChange={(e) => setVolume(Number(e.target.value))} style={{ width: "100%" }} />
+          <input type="range" min={0} max={100} step={1} value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="settings-range" />
         </div>
 
-        <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem", cursor: "pointer" }}>
+        <div className="settings-checkboxes">
+          <label className="settings-checkbox-label">
             <input type="checkbox" checked={subtitles} onChange={(e) => setSubtitles(e.target.checked)} />
             Subtitles
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem", cursor: "pointer" }}>
+          <label className="settings-checkbox-label">
             <input type="checkbox" checked={highContrast} onChange={(e) => setHighContrast(e.target.checked)} />
             High Contrast
           </label>
         </div>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+        <div className="settings-actions">
           <button className="ui-button secondary" onClick={onClose}>Close</button>
         </div>
       </div>

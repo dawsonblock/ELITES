@@ -16,11 +16,13 @@ export function buildSaveData(sceneId: string, checkpointId: string, position: [
     collectedEvidenceIds: gameState.collectedEvidence(),
     completedObjectiveIds: gameState.completedObjectives(),
     activeObjectiveIds: gameState.activeObjectives(),
-    unlockedDoorIds: Array.from((gameState as any)._unlockedDoors as Set<string>),
-    disabledCameraIds: Array.from((gameState as any)._disabledCameras as Set<string>),
+    unlockedDoorIds: gameState.unlockedDoors(),
+    disabledCameraIds: gameState.disabledCameras(),
     terminalStates: {},
+    unlockedTerminalIds: gameState.unlockedTerminals(),
     alertState: gameState.alert,
     alarmsTriggered: 0,
+    lockdown: gameState.lockdown,
     endingFlags: gameState.endingFlags,
     settingsSnapshot: gameState.getSettings(),
     playtimeSeconds: gameState.playtimeSeconds,
@@ -36,7 +38,9 @@ export function restoreSaveData(data: SaveData): boolean {
   data.activeObjectiveIds.forEach((id) => gameState.activateObjective(id));
   data.unlockedDoorIds.forEach((id) => gameState.unlockDoor(id));
   data.disabledCameraIds.forEach((id) => gameState.disableCamera(id));
+  data.unlockedTerminalIds?.forEach((id) => gameState.unlockTerminal(id));
   gameState.setAlert(data.alertState as any);
+  gameState.lockdown = data.lockdown ?? false;
   Object.entries(data.endingFlags).forEach(([k, v]) => gameState.setEndingFlag(k, v));
   if (data.settingsSnapshot) gameState.setSettings(data.settingsSnapshot);
   objectiveSystem.checkEvidenceGates();

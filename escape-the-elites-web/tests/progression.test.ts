@@ -116,4 +116,81 @@ describe("Progression System", () => {
     expect(downloadCmd).toBeDefined();
     expect(downloadCmd.params?.evidenceId).toBe("server_archive_001");
   });
+
+  it("collecting keycard allows door unlock via gameState", () => {
+    evidenceSystem.collect("staff_keycard_001");
+    gameState.unlockDoor("maintenance_door");
+    expect(gameState.isDoorUnlocked("maintenance_door")).toBe(true);
+  });
+
+  it("collecting access log enables bunker terminal objective progression", () => {
+    gameState.completeObjective("obj_find_way_inside");
+    gameState.completeObjective("obj_enter_service_route");
+    gameState.completeObjective("obj_unlock_maintenance_door");
+    gameState.completeObjective("obj_find_office_evidence");
+    gameState.completeObjective("obj_find_bunker_access");
+    objectiveSystem.checkEvidenceGates();
+
+    evidenceSystem.collect("access_log_001");
+    objectiveSystem.checkEvidenceGates();
+
+    expect(gameState.hasEvidence("access_log_001")).toBe(true);
+    expect(gameState.getObjective("obj_enter_bunker")?.status).toBe("active");
+    // Bunker door requires access log
+    expect(gameState.getObjective("obj_enter_bunker")?.evidenceGate).toContain("access_log_001");
+  });
+
+  it("download completion triggers lockdown state", () => {
+    evidenceSystem.collect("server_archive_001");
+    gameState.setAlert("full_lockdown");
+    gameState.lockdown = true;
+    expect(gameState.alert).toBe("full_lockdown");
+    expect(gameState.lockdown).toBe(true);
+  });
+
+  it("full progression chain from dock to broadcast ending", () => {
+    // Simulate the full story progression
+    evidenceSystem.collect("service_map_001");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_find_way_inside");
+    gameState.completeObjective("obj_enter_service_route");
+
+    evidenceSystem.collect("staff_keycard_001");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_unlock_maintenance_door");
+
+    evidenceSystem.collect("guest_log_001");
+    evidenceSystem.collect("payment_note_001");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_find_office_evidence");
+
+    evidenceSystem.collect("security_feed_002");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_find_bunker_access");
+
+    evidenceSystem.collect("access_log_001");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_enter_bunker");
+
+    evidenceSystem.collect("server_archive_001");
+    evidenceSystem.collect("broadcast_key_001");
+    evidenceSystem.collect("transport_manifest_001");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_download_archive");
+    gameState.completeObjective("obj_escape_lockdown");
+
+    evidenceSystem.collect("hidden_archive_001");
+    objectiveSystem.checkEvidenceGates();
+    gameState.completeObjective("obj_reach_broadcast_tower");
+    gameState.completeObjective("obj_upload_broadcast");
+
+    const endingSystem = new EndingSystem();
+    gameState.setEndingFlag("broadcastComplete", true);
+    const score = endingSystem.calculateScore();
+    const end = endingSystem.determineEnding(score);
+
+    expect(end).not.toBe("bad");
+    expect(score.requiredEvidencePercent).toBeGreaterThan(0);
+    expect(gameState.completedObjectives().length).toBeGreaterThanOrEqual(10);
+  });
 });

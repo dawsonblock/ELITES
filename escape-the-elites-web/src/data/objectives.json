@@ -2,14 +2,14 @@
   {
     "id": "obj_find_way_inside",
     "title": "Find a way inside",
-    "description": "The main gate is locked. There must be another entrance.",
+    "description": "The main gate is locked. Search the dock area for an alternate entrance.",
     "status": "active",
     "isMain": true
   },
   {
     "id": "obj_enter_service_route",
     "title": "Enter the service corridor",
-    "description": "Use the maintenance route to get past the main gate.",
+    "description": "Follow the service corridor past the main gate. Look for keycard access ahead.",
     "status": "locked",
     "dependsOn": ["obj_find_way_inside"],
     "evidenceGate": ["service_map_001"],
@@ -18,7 +18,7 @@
   {
     "id": "obj_avoid_first_camera",
     "title": "Avoid the security camera",
-    "description": "A camera sweeps the service entrance. Time your movement carefully.",
+    "description": "A camera sweeps the service entrance. Read the maintenance note for sweep timing, then move when it is safe.",
     "status": "locked",
     "dependsOn": ["obj_enter_service_route"],
     "evidenceGate": ["camera_note_001"],
@@ -27,7 +27,7 @@
   {
     "id": "obj_unlock_maintenance_door",
     "title": "Unlock the maintenance door",
-    "description": "Use the staff keycard to open the maintenance door.",
+    "description": "Find the staff keycard in the service corridor, then use it on the maintenance door to enter the mansion.",
     "status": "locked",
     "dependsOn": ["obj_enter_service_route"],
     "evidenceGate": ["staff_keycard_001"],
@@ -36,7 +36,7 @@
   {
     "id": "obj_find_office_evidence",
     "title": "Find proof of restricted movement",
-    "description": "Search the mansion office for records of late-night arrivals.",
+    "description": "In the mansion office, search the desk and cabinets for guest arrival records.",
     "status": "locked",
     "dependsOn": ["obj_unlock_maintenance_door"],
     "isMain": true
@@ -44,7 +44,7 @@
   {
     "id": "obj_investigate_finances",
     "title": "Investigate payment records",
-    "description": "A payment ledger fragment hints at coded offshore transfers.",
+    "description": "Look for the payment ledger fragment in the office drawers. It may reveal offshore transfer patterns.",
     "status": "locked",
     "dependsOn": ["obj_find_office_evidence"],
     "evidenceGate": ["payment_note_001"],
@@ -53,7 +53,7 @@
   {
     "id": "obj_find_bunker_access",
     "title": "Find bunker access",
-    "description": "The security wing holds the path to the underground server room.",
+    "description": "Head to the security wing. The archived security feed shows the path to the underground bunker.",
     "status": "locked",
     "dependsOn": ["obj_find_office_evidence"],
     "evidenceGate": ["security_feed_002"],
@@ -62,7 +62,7 @@
   {
     "id": "obj_enter_bunker",
     "title": "Enter the server bunker",
-    "description": "Use the access log to find the bunker door code.",
+    "description": "Find the bunker access log in the security wing. The door code is inside.",
     "status": "locked",
     "dependsOn": ["obj_find_bunker_access"],
     "evidenceGate": ["access_log_001"],
@@ -71,7 +71,7 @@
   {
     "id": "obj_download_archive",
     "title": "Download the server archive",
-    "description": "Start the download from the main server terminal.",
+    "description": "Use the server terminal in the bunker to start the encrypted archive download.",
     "status": "locked",
     "dependsOn": ["obj_enter_bunker"],
     "isMain": true
@@ -79,7 +79,7 @@
   {
     "id": "obj_escape_lockdown",
     "title": "Escape the lockdown",
-    "description": "The alarm triggered. Find a way out before the system seals.",
+    "description": "The alarm triggered. Exit the bunker and head toward the broadcast tower before the lockdown seals all routes.",
     "status": "locked",
     "dependsOn": ["obj_download_archive"],
     "isMain": true
@@ -87,7 +87,7 @@
   {
     "id": "obj_reach_broadcast_tower",
     "title": "Reach the broadcast tower",
-    "description": "Get to the tower and prepare the uplink.",
+    "description": "Reach the broadcast tower. You will need the server archive and the broadcast routing key.",
     "status": "locked",
     "dependsOn": ["obj_escape_lockdown"],
     "evidenceGate": ["server_archive_001"],
@@ -96,7 +96,7 @@
   {
     "id": "obj_upload_broadcast",
     "title": "Upload the evidence",
-    "description": "Use the broadcast console to transmit the archive.",
+    "description": "Use the broadcast console at the tower to transmit the evidence archive to the outside world.",
     "status": "locked",
     "dependsOn": ["obj_reach_broadcast_tower"],
     "evidenceGate": ["broadcast_key_001"],
@@ -105,7 +105,7 @@
   {
     "id": "obj_discover_network",
     "title": "Discover the network",
-    "description": "A hidden memo suggests this island was only one node.",
+    "description": "Find the redacted memo in the bunker. It reveals this island is just one node in a larger network.",
     "status": "locked",
     "dependsOn": ["obj_download_archive"],
     "evidenceGate": ["hidden_archive_001"],
