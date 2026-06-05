@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { gameState } from "../game/GameState";
+import { eventBus } from "../utils/eventBus";
+import { GameEvents } from "../game/GameEvents";
 import type { EvidenceItem } from "../types/evidence";
 
 type Props = {
@@ -11,10 +13,10 @@ type Props = {
 function broadcastReadiness(collected: EvidenceItem[]): number {
   const all = gameState.allEvidence();
   const required = all.filter((e) => e.requiredForBestEnding);
-  const requiredCollected = required.filter((e) => collected.includes(e));
+  const requiredCollected = required.filter((e) => collected.some((c) => c.id === e.id));
   const reqPct = required.length ? (requiredCollected.length / required.length) * 100 : 0;
   const opt = all.filter((e) => !e.requiredForBestEnding);
-  const optCollected = opt.filter((e) => collected.includes(e));
+  const optCollected = opt.filter((e) => collected.some((c) => c.id === e.id));
   const optPct = opt.length ? (optCollected.length / opt.length) * 100 : 0;
   const corTotal = all.reduce((sum, e) => sum + e.corroborates.length, 0);
   const corMatched = collected.reduce((sum, e) => {
@@ -25,6 +27,16 @@ function broadcastReadiness(collected: EvidenceItem[]): number {
 }
 
 export const EvidenceBoard: React.FC<Props> = ({ open, onClose, onViewEvidence }) => {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const onChange = () => setTick((t) => t + 1);
+    const unsub1 = eventBus.on(GameEvents.EVIDENCE_COLLECTED, onChange);
+    const unsub2 = eventBus.on(GameEvents.OBJECTIVE_COMPLETED, onChange);
+    const unsub3 = eventBus.on(GameEvents.OBJECTIVE_UPDATED, onChange);
+    return () => { unsub1(); unsub2(); unsub3(); };
+  }, []);
+
   const collected = gameState.allEvidence().filter((e) => gameState.hasEvidence(e.id));
   const readiness = broadcastReadiness(collected);
   const missing = gameState.allEvidence().filter((e) => !gameState.hasEvidence(e.id) && e.requiredForBestEnding);

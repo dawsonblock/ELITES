@@ -690,8 +690,11 @@ export class Game {
     else if (current >= 25) state = "watched";
 
     const prevState = gameState.detection;
+    const prevValue = gameState.detectionValue;
     gameState.setDetection(current, state);
-    eventBus.emit(GameEvents.DETECTION_CHANGED);
+    if (state !== prevState || current !== prevValue) {
+      eventBus.emit(GameEvents.DETECTION_CHANGED);
+    }
 
     // Audio feedback on state escalation
     if (state !== prevState && (state === "watched" || state === "suspicious" || state === "critical" || state === "detected")) {

@@ -26,6 +26,9 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
   const [unlocked, setUnlocked] = useState(false);
   const [unlockInput, setUnlockInput] = useState("");
   const downloadEvidenceIdRef = useRef<string | null>(null);
+  const downloadCompletedRef = useRef(false);
+  const activeCmdRef = useRef(activeCmd);
+  activeCmdRef.current = activeCmd;
 
   useEffect(() => {
     if (!open || !terminalId) return;
@@ -37,6 +40,7 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     setDownloading(false);
     setDownloadProgress(0);
     setUnlockInput("");
+    downloadEvidenceIdRef.current = null;
 
     // Check if this terminal was previously unlocked (persisted in gameState)
     const wasUnlocked = def ? !def.locked || gameState.isTerminalUnlocked(def.id) : false;
@@ -72,24 +76,11 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
 
   useEffect(() => {
     if (!downloading) return;
+    downloadCompletedRef.current = false;
     const interval = setInterval(() => {
       setDownloadProgress((p) => {
         if (p >= 100) {
           clearInterval(interval);
-          setDownloading(false);
-          addLine("> DOWNLOAD COMPLETE", "success");
-          addLine("> LOCKDOWN SEQUENCE INITIATED", "error");
-          addLine("", "system");
-          const eid = downloadEvidenceIdRef.current;
-          if (eid) {
-            evidenceSystem.collect(eid);
-            objectiveSystem.checkEvidenceGates();
-            downloadEvidenceIdRef.current = null;
-          }
-          eventBus.emit(GameEvents.DOWNLOAD_COMPLETED);
-          eventBus.emit(GameEvents.LOCKDOWN_TRIGGERED);
-          gameState.lockdown = true;
-          gameState.setAlert("full_lockdown");
           return 100;
         }
         if (Math.random() > 0.7) audioSystem.playTerminalType();
@@ -98,6 +89,25 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     }, 500);
     return () => clearInterval(interval);
   }, [downloading]);
+
+  useEffect(() => {
+    if (!downloading || downloadProgress < 100 || downloadCompletedRef.current) return;
+    downloadCompletedRef.current = true;
+    setDownloading(false);
+    addLine("> DOWNLOAD COMPLETE", "success");
+    addLine("> LOCKDOWN SEQUENCE INITIATED", "error");
+    addLine("", "system");
+    const eid = downloadEvidenceIdRef.current;
+    if (eid) {
+      evidenceSystem.collect(eid);
+      objectiveSystem.checkEvidenceGates();
+      downloadEvidenceIdRef.current = null;
+    }
+    eventBus.emit(GameEvents.DOWNLOAD_COMPLETED);
+    eventBus.emit(GameEvents.LOCKDOWN_TRIGGERED);
+    gameState.lockdown = true;
+    gameState.setAlert("full_lockdown");
+  }, [downloading, downloadProgress]);
 
   const addLine = useCallback((text: string, type: LineItem["type"] = "system") => {
     setLines((prev) => [...prev, { text, type }]);
@@ -215,12 +225,12 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
         setActiveCmd((i) => (i - 1 + term.commands.length) % term.commands.length);
       } else if (e.key === "Enter") {
         e.preventDefault();
-        runCommand(term.commands[activeCmd]);
+        runCommand(term.commands[activeCmdRef.current]);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, term, booting, downloading, activeCmd, unlocked, unlockInput]);
+  }, [open, term, booting, downloading, unlocked, unlockInput]);
 
   if (!open || !term) return null;
 
