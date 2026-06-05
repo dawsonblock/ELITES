@@ -15,6 +15,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -385,9 +386,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
   touch-action: manipulation;
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
