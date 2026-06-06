@@ -23,10 +23,30 @@ import { audioSystem } from "./systems/AudioSystem";
 import type { EndingType } from "./types/ending";
 import type * as pc from "playcanvas";
 import { buildSaveData, saveGame, loadSave, restoreSaveData } from "./game/SaveManager";
+import { GameConfig } from "./game/GameConfig";
 import "./styles/global.css";
 import "./styles/ui.css";
 
 type AppScreen = "menu" | "game" | "ending" | "credits";
+
+type EteTestHooks = {
+  collectEvidence: (id: string) => void;
+  completeObjective: (id: string) => void;
+  unlockDoor: (id: string) => void;
+  loadScene: (id: string) => void;
+  teleport: (pos: [number, number, number], yaw?: number, pitch?: number) => void;
+  triggerBroadcast: () => void;
+  isReady: () => boolean;
+  saveToSlot: (slot: string) => void;
+  getState: () => {
+    sceneId: string;
+    evidence: string[];
+    objectives: string[];
+    detection: string;
+    alert: string;
+    lockdown: boolean;
+  };
+};
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -205,6 +225,17 @@ export default function App() {
           eventBus.emit(GameEvents.DOOR_UNLOCKED, id);
         },
         loadScene: (id: string) => gameRef.current?.loadScene(id),
+        teleport: (pos: [number, number, number], yaw?: number, pitch?: number) => {
+          if (gameRef.current) {
+            const safeY = Math.max(pos[1], GameConfig.player.radius);
+            gameRef.current.loadPlayerSnapshot({
+              sceneId: gameRef.current.getSceneId(),
+              position: [pos[0], safeY, pos[2]],
+              yaw: yaw ?? 0,
+              pitch: pitch ?? 0,
+            });
+          }
+        },
         triggerBroadcast: () => eventBus.emit(GameEvents.BROADCAST_UPLOAD),
         isReady: () => !!gameRef.current,
         saveToSlot: (slot: string) => {
@@ -222,7 +253,7 @@ export default function App() {
           alert: gameState.alert,
           lockdown: gameState.lockdown,
         }),
-      };
+      } as EteTestHooks;
     }
     return () => {
       if (import.meta.env.DEV) {

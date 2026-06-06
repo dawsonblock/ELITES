@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-async function waitForTestHooks(page: any) {
-  await page.waitForFunction(() => !!(window as any).__ETE_TEST__, { timeout: 10000 });
-  await page.waitForFunction(() => (window as any).__ETE_TEST__.isReady(), { timeout: 10000 });
-}
+import { waitForTestHooks } from "./helpers";
 
 test("full route: collect evidence and reach ending", async ({ page }) => {
   await page.goto("/");

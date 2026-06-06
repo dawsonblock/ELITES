@@ -15,7 +15,7 @@ test("game starts and canvas appears", async ({ page }) => {
 test("pause menu opens", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /Start/i }).click();
-  await page.waitForTimeout(500);
+  await expect(page.locator("canvas.game-canvas")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByText(/Resume/i)).toBeVisible();
 });

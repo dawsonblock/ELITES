@@ -140,7 +140,7 @@ export class PlayerController {
     const rot = this.cameraEntity?.getLocalEulerAngles();
     return {
       sceneId,
-      position: pos ? ([pos.x, pos.y, pos.z] as [number, number, number]) : ([0, 1.7, 0] as [number, number, number]),
+      position: pos ? ([pos.x, pos.y, pos.z] as [number, number, number]) : ([0, GameConfig.player.height / 2, 0] as [number, number, number]),
       yaw: rot?.y ?? 0,
       pitch: rot?.x ?? 0,
     };
@@ -159,16 +159,16 @@ export class PlayerController {
 
   resetPosition(sceneId: string) {
     const spawns: Record<string, [number, number, number]> = {
-      dock: [0, 1.7, 5],
-      service_entrance: [0, 1.7, 8],
-      mansion_office: [0, 1.7, 4],
-      security_wing: [0, 1.7, 6],
-      bunker_server_room: [0, 1.7, 6],
-      broadcast_tower: [0, 1.7, 3],
+      dock: [0, GameConfig.player.height / 2, 5],
+      service_entrance: [0, GameConfig.player.height / 2, 8],
+      mansion_office: [0, GameConfig.player.height / 2, 4],
+      security_wing: [0, GameConfig.player.height / 2, 6],
+      bunker_server_room: [0, GameConfig.player.height / 2, 6],
+      broadcast_tower: [0, GameConfig.player.height / 2, 3],
     };
     const spawn = spawns[sceneId];
     if (spawn && this.playerEntity) {
-      this.playerEntity.setPosition(spawn[0], GameConfig.player.height / 2, spawn[2]);
+      this.playerEntity.setPosition(spawn[0], spawn[1], spawn[2]);
       this.targetYaw = 0;
       this.targetPitch = 0;
       if (this.cameraEntity) this.cameraEntity.setLocalEulerAngles(0, 0, 0);
@@ -176,6 +176,6 @@ export class PlayerController {
   }
 
   getPosition() {
-    return this.playerEntity?.getPosition() ?? new pc.Vec3(0, 1.7, 0);
+    return this.playerEntity?.getPosition() ?? new pc.Vec3(0, GameConfig.player.height / 2, 0);
   }
 }

@@ -1,4 +1,5 @@
 import * as pc from "playcanvas";
+import { GameConfig } from "./GameConfig";
 import { GameEvents } from "./GameEvents";
 import { gameState } from "./GameState";
 import { eventBus } from "../utils/eventBus";
@@ -178,7 +179,7 @@ export class Game {
   getPlayerSnapshot() {
     return this.playerController?.getSnapshot(this.currentSceneId) ?? {
       sceneId: this.currentSceneId,
-      position: [0, 1.7, 0] as [number, number, number],
+      position: [0, GameConfig.player.height / 2, 0] as [number, number, number],
       yaw: 0,
       pitch: 0,
     };
