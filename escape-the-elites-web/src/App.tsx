@@ -1,11 +1,7 @@
-import { useEffect, useRef, useState, useCallback, lazy, Suspense } from "react";
+import { useCallback, useRef, useState, lazy, Suspense } from "react";
 import type { Game } from "./game/Game";
 import { gameState } from "./game/GameState";
 import { inputManager } from "./game/InputManager";
-import { eventBus } from "./utils/eventBus";
-import { GameEvents } from "./game/GameEvents";
-import { evidenceSystem } from "./systems/EvidenceSystem";
-import { objectiveSystem } from "./systems/ObjectiveSystem";
 import { endingSystem } from "./systems/EndingSystem";
 import { MainMenu } from "./ui/MainMenu";
 import { HUD } from "./ui/HUD";
@@ -20,42 +16,22 @@ const DocumentViewer = lazy(() => import("./ui/DocumentViewer").then(m => ({ def
 const SettingsPanel = lazy(() => import("./ui/SettingsPanel").then(m => ({ default: m.SettingsPanel })));
 const MobileControls = lazy(() => import("./ui/MobileControls").then(m => ({ default: m.MobileControls })));
 const BroadcastSequence = lazy(() => import("./ui/BroadcastSequence").then(m => ({ default: m.BroadcastSequence })));
-import { audioSystem } from "./systems/AudioSystem";
 import type { EndingType } from "./types/ending";
-import type * as pc from "playcanvas";
 import { buildSaveData, saveGame, loadSave, restoreSaveData } from "./game/SaveManager";
-import { GameConfig } from "./game/GameConfig";
+import { evidenceSystem } from "./systems/EvidenceSystem";
+import { objectiveSystem } from "./systems/ObjectiveSystem";
 import "./styles/global.css";
 import "./styles/ui.css";
 
-type AppScreen = "menu" | "game" | "ending" | "credits";
-
-type EteTestHooks = {
-  collectEvidence: (id: string) => void;
-  completeObjective: (id: string) => void;
-  unlockDoor: (id: string) => void;
-  loadScene: (id: string) => void;
-  teleport: (pos: [number, number, number], yaw?: number, pitch?: number) => void;
-  triggerBroadcast: () => void;
-  isReady: () => boolean;
-  saveToSlot: (slot: string) => void;
-  placePlayerNear: (evidenceId: string) => void;
-  hasEvidence: (id: string) => boolean;
-  isInteractablePresent: (evidenceId: string) => boolean;
-  getState: () => {
-    sceneId: string;
-    evidence: string[];
-    objectives: string[];
-    detection: string;
-    alert: string;
-    lockdown: boolean;
-  };
-};
+import { useGameLifecycle } from "./app/hooks/useGameLifecycle";
+import { useGameEvents } from "./app/hooks/useGameEvents";
+import { useDevTestHooks } from "./app/hooks/useDevTestHooks";
+import { CreditsOverlay } from "./app/CreditsOverlay";
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Game | null>(null);
-  const [screen, setScreen] = useState<AppScreen>("menu");
+  const [screen, setScreen] = useState<"menu" | "game" | "ending" | "credits">("menu");
   const [paused, setPaused] = useState(false);
   const [evidenceBoardOpen, setEvidenceBoardOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -78,215 +54,40 @@ export default function App() {
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const pendingBroadcastRef = useRef(false);
 
-  const createGameCallbacks = useCallback((gameInstance?: Game) => {
-    return {
-      onReady: () => {
-        inputManager.requestPointerLock(canvasRef.current!);
-      },
-      onSceneChange: (sceneId: string) => {
-        gameState.sceneId = sceneId;
-        setLoadingScene(sceneId);
-        setTimeout(() => setLoadingScene(null), 800);
-        if (gameInstance) {
-          const snap = gameInstance.getPlayerSnapshot();
-          const saveData = buildSaveData(snap.sceneId, "checkpoint", snap.position, [snap.pitch, snap.yaw, 0]);
-          saveGame("AutoSave", saveData);
-          setHasSave(true);
-          setSlotStates((prev) => ({ ...prev, AutoSave: true }));
-        }
-        setAutosaveToast(true);
-        setTimeout(() => setAutosaveToast(false), 1500);
-      },
-      onInteractTarget: (target: { type: string; label: string } | null) => {
-        eventBus.emit(GameEvents.INTERACT_TARGET, target);
-      },
-      onSceneEnter: (_sceneId: string, sceneName: string) => {
-        setSceneNote(sceneName);
-      },
-    };
-  }, []);
+  const { startGame, continueGame, quitToMenu, resumeGame } = useGameLifecycle({
+    canvasRef,
+    gameRef,
+    screen,
+    setScreen,
+    setLoadingScene,
+    setHasSave,
+    setSlotStates,
+    setAutosaveToast,
+    setSceneNote,
+    setPaused,
+    setEvidenceBoardOpen,
+    setTerminalOpen,
+    setEnding,
+    setBroadcastOpen,
+    pendingBroadcastRef,
+  });
 
-  const initGame = useCallback(async () => {
-    if (gameRef.current || !canvasRef.current) return;
+  useGameEvents({
+    canvasRef,
+    gameRef,
+    screen,
+    paused,
+    terminalOpen,
+    evidenceBoardOpen,
+    setTerminalOpen,
+    setActiveTerminalId,
+    setEvidenceBoardOpen,
+    setPaused,
+    setBroadcastOpen,
+    pendingBroadcastRef,
+  });
 
-    evidenceSystem.init();
-    objectiveSystem.init();
-
-    const { Game } = await import("./game/Game");
-    const game = new Game();
-    game.setCallbacks(createGameCallbacks(game));
-    game.init(canvasRef.current);
-
-    gameRef.current = game;
-  }, [createGameCallbacks]);
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Escape") {
-        if (terminalOpen) {
-          setTerminalOpen(false);
-          gameState.terminalOpen = false;
-          inputManager.requestPointerLock(canvasRef.current!);
-          return;
-        }
-        if (evidenceBoardOpen) {
-          setEvidenceBoardOpen(false);
-          gameState.evidenceBoardOpen = false;
-          inputManager.requestPointerLock(canvasRef.current!);
-          return;
-        }
-        if (screen === "game") {
-          const nextPaused = !paused;
-          setPaused(nextPaused);
-          gameState.paused = nextPaused;
-          if (nextPaused) {
-            inputManager.exitPointerLock();
-          } else {
-            inputManager.requestPointerLock(canvasRef.current!);
-          }
-        }
-      }
-      if (e.code === "Tab") {
-        e.preventDefault();
-        if (screen === "game" && !paused && !terminalOpen) {
-          const next = !evidenceBoardOpen;
-          setEvidenceBoardOpen(next);
-          gameState.evidenceBoardOpen = next;
-          if (next) {
-            inputManager.exitPointerLock();
-          } else {
-            inputManager.requestPointerLock(canvasRef.current!);
-          }
-        }
-      }
-      if (e.code === "KeyE") {
-        if (screen === "game" && !paused && !terminalOpen && !evidenceBoardOpen) {
-          gameRef.current?.interact();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [screen, paused, terminalOpen, evidenceBoardOpen]);
-
-  useEffect(() => {
-    const onInteract = (data: unknown) => {
-      const d = data as { type: string; label: string; meta?: Record<string, unknown>; entity?: pc.Entity };
-      if (d.type === "evidence" && d.meta?.evidenceId) {
-        const collected = evidenceSystem.collect(d.meta.evidenceId as string);
-        if (collected) {
-          objectiveSystem.checkEvidenceGates();
-          if (d.entity) {
-            gameRef.current?.removeInteractable(d.entity);
-          }
-        }
-      } else if (d.type === "door" && d.meta?.doorId) {
-        const doorId = d.meta.doorId as string;
-        const needsKey = d.meta.needsKey as string | undefined;
-        const needsCode = d.meta.needsCode as string | undefined;
-        const locked = d.meta.locked as boolean;
-        const lockedMessage = d.meta.lockedMessage as string | undefined;
-        if (gameState.isDoorUnlocked(doorId) || !locked) {
-          gameState.unlockDoor(doorId);
-          eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
-        } else if (needsKey && gameState.hasEvidence(needsKey)) {
-          gameState.unlockDoor(doorId);
-          eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
-        } else if (needsCode) {
-          // For simplicity in vertical slice, auto-unlock if player has access log
-          if (gameState.hasEvidence("access_log_001")) {
-            gameState.unlockDoor(doorId);
-            eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
-          } else {
-            eventBus.emit(GameEvents.SYSTEM_MESSAGE, lockedMessage ?? "Requires Bunker Access Code");
-          }
-        } else {
-          eventBus.emit(GameEvents.SYSTEM_MESSAGE, lockedMessage ?? "Locked");
-        }
-      } else if (d.type === "terminal" && d.meta?.terminalId) {
-        const tid = d.meta.terminalId as string;
-        setActiveTerminalId(tid);
-        setTerminalOpen(true);
-        gameState.terminalOpen = true;
-        inputManager.exitPointerLock();
-      } else if (d.type === "note" && d.meta?.note) {
-        eventBus.emit(GameEvents.SYSTEM_MESSAGE, d.meta.note as string);
-      }
-    };
-
-    const unsub = eventBus.on(GameEvents.INTERACT_TRIGGER, onInteract);
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    const onDownloadComplete = () => {
-      objectiveSystem.complete("obj_download_archive");
-      objectiveSystem.checkEvidenceGates();
-    };
-    const unsub = eventBus.on(GameEvents.DOWNLOAD_COMPLETED, onDownloadComplete);
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      (window as any).__ETE_TEST__ = {
-        collectEvidence: (id: string) => evidenceSystem.collect(id),
-        completeObjective: (id: string) => objectiveSystem.complete(id),
-        unlockDoor: (id: string) => {
-          gameState.unlockDoor(id);
-          eventBus.emit(GameEvents.DOOR_UNLOCKED, id);
-        },
-        loadScene: (id: string) => gameRef.current?.loadScene(id),
-        teleport: (pos: [number, number, number], yaw?: number, pitch?: number) => {
-          if (gameRef.current) {
-            const safeY = Math.max(pos[1], GameConfig.player.radius);
-            gameRef.current.loadPlayerSnapshot({
-              sceneId: gameRef.current.getSceneId(),
-              position: [pos[0], safeY, pos[2]],
-              yaw: yaw ?? 0,
-              pitch: pitch ?? 0,
-            });
-          }
-        },
-        triggerBroadcast: () => eventBus.emit(GameEvents.BROADCAST_UPLOAD),
-        isReady: () => !!gameRef.current,
-        saveToSlot: (slot: string) => {
-          if (gameRef.current) {
-            const snap = gameRef.current.getPlayerSnapshot();
-            const data = buildSaveData(snap.sceneId, "test", snap.position, [snap.pitch, snap.yaw, 0]);
-            saveGame(slot, data);
-          }
-        },
-        placePlayerNear: (evidenceId: string) => {
-          if (!gameRef.current) return;
-          const pos = gameRef.current.getInteractablePosition(evidenceId);
-          if (!pos) return;
-          gameRef.current.loadPlayerSnapshot({
-            sceneId: gameRef.current.getSceneId(),
-            position: [pos[0], pos[1] + 0.3, pos[2] + 1.2],
-            yaw: 180,
-            pitch: -10,
-          });
-        },
-        hasEvidence: (id: string) => gameState.hasEvidence(id),
-        isInteractablePresent: (evidenceId: string) => !!gameRef.current?.hasInteractable(evidenceId),
-        getState: () => ({
-          sceneId: gameState.sceneId,
-          evidence: gameState.collectedEvidence(),
-          objectives: gameState.completedObjectives(),
-          detection: gameState.detection,
-          alert: gameState.alert,
-          lockdown: gameState.lockdown,
-        }),
-      } as EteTestHooks;
-    }
-    return () => {
-      if (import.meta.env.DEV) {
-        delete (window as any).__ETE_TEST__;
-      }
-    };
-  }, []);
+  useDevTestHooks(gameRef);
 
   const completeBroadcast = useCallback(() => {
     gameState.setEndingFlag("broadcastComplete", true);
@@ -300,104 +101,6 @@ export default function App() {
     gameState.paused = false;
     inputManager.exitPointerLock();
   }, []);
-
-  useEffect(() => {
-    const onBroadcast = () => {
-      if (pendingBroadcastRef.current) return;
-      pendingBroadcastRef.current = true;
-      setBroadcastOpen(true);
-      // Freeze game input during broadcast sequence
-      gameState.terminalOpen = true;
-      inputManager.exitPointerLock();
-    };
-    const unsub = eventBus.on(GameEvents.BROADCAST_UPLOAD, onBroadcast);
-    return () => unsub();
-  }, []);
-
-  const startGame = () => {
-    setScreen("game");
-    setPaused(false);
-    setEvidenceBoardOpen(false);
-    setTerminalOpen(false);
-    setBroadcastOpen(false);
-    pendingBroadcastRef.current = false;
-    setEnding(null);
-    gameState.resetProgress();
-    gameState.paused = false;
-    gameState.evidenceBoardOpen = false;
-    gameState.terminalOpen = false;
-    gameState.lockdown = false;
-    audioSystem.init();
-    audioSystem.resume();
-    if (gameRef.current) {
-      gameRef.current.dispose();
-      gameRef.current = null;
-    }
-    // Reset for fresh play in vertical slice
-    setTimeout(async () => {
-      await initGame();
-      inputManager.requestPointerLock(canvasRef.current!);
-    }, 0);
-  };
-
-  const resumeGame = () => {
-    setPaused(false);
-    gameState.paused = false;
-    inputManager.requestPointerLock(canvasRef.current!);
-  };
-
-  const continueGame = () => {
-    const data = loadSave("AutoSave");
-    if (!data) return;
-    setScreen("game");
-    setPaused(false);
-    setEvidenceBoardOpen(false);
-    setTerminalOpen(false);
-    setEnding(null);
-    gameState.resetProgress();
-    gameState.paused = false;
-    gameState.evidenceBoardOpen = false;
-    gameState.terminalOpen = false;
-    gameState.lockdown = false;
-    audioSystem.init();
-    audioSystem.resume();
-    if (gameRef.current) {
-      gameRef.current.dispose();
-      gameRef.current = null;
-    }
-    setTimeout(async () => {
-      if (!canvasRef.current) return;
-      evidenceSystem.init();
-      objectiveSystem.init();
-      restoreSaveData(data);
-      const { Game } = await import("./game/Game");
-      const game = new Game();
-      game.setCallbacks(createGameCallbacks(game));
-      game.init(canvasRef.current);
-      gameRef.current = game;
-      game.loadPlayerSnapshot({
-        sceneId: data.sceneId,
-        position: data.playerPosition,
-        yaw: data.playerRotation[1],
-        pitch: data.playerRotation[0],
-      });
-    }, 0);
-  };
-
-  const quitToMenu = () => {
-    // Auto-save before quitting
-    if (gameRef.current && screen === "game") {
-      const snap = gameRef.current.getPlayerSnapshot();
-      const data = buildSaveData(snap.sceneId, "quit", snap.position, [snap.pitch, snap.yaw, 0]);
-      saveGame("AutoSave", data);
-      setHasSave(true);
-    }
-    setScreen("menu");
-    setPaused(false);
-    gameState.paused = false;
-    gameRef.current?.dispose();
-    gameRef.current = null;
-  };
 
   return (
     <div className="app-root">
@@ -509,31 +212,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {creditsOpen && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(5,5,8,0.95)",
-            zIndex: 120,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 32,
-          }}
-        >
-          <h2 style={{ marginBottom: 24 }}>Credits</h2>
-          <p style={{ color: "#a0a0b0", maxWidth: 480, textAlign: "center", lineHeight: 1.6 }}>
-            Escape the Elites: The Broadcast is a fictional investigative thriller.
-            <br /><br />
-            Design, Engineering, and Direction by the development team.
-            <br /><br />
-            Built with PlayCanvas, React, TypeScript, and Vite.
-          </p>
-          <button className="ui-button" style={{ marginTop: 32 }} onClick={() => setCreditsOpen(false)}>Close</button>
-        </div>
-      )}
+      {creditsOpen && <CreditsOverlay onClose={() => setCreditsOpen(false)} />}
 
       {settingsOpen && screen === "menu" && (
         <Suspense fallback={null}>

@@ -317,6 +317,34 @@
   justify-content: flex-end;
 }
 
+/* Credits overlay */
+.credits-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.95);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.credits-overlay h2 {
+  margin-bottom: 24px;
+}
+
+.credits-overlay p {
+  color: var(--text-secondary, #a0a0b0);
+  max-width: 480px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.credits-close-btn {
+  margin-top: 32px;
+}
+
 /* App layout */
 .app-root {
   position: relative;

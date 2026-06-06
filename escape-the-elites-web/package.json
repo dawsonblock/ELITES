@@ -11,9 +11,12 @@
     "test:watch": "vitest --exclude e2e",
     "test:e2e": "playwright test --config playwright.config.ts",
     "test:e2e:prod": "npm run build && playwright test --config playwright.prod.config.ts",
+    "clean": "rm -rf dist test-results playwright-report",
     "verify": "npm run lint && npm test && npm run build",
-    "verify:full": "npm run verify:release-package && npm run lint && npm test && npm run build && npm run test:e2e && npm run test:e2e:prod",
+    "verify:full": "npm run clean && npm run lint && npm test && npm run build && npm run test:e2e && npm run test:e2e:prod",
+    "verify:package": "npm run clean && npm run verify:release-package",
     "verify:release-package": "node scripts/verify-release.mjs",
+    "verify:release-package:strict": "node scripts/verify-release.mjs --strict",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

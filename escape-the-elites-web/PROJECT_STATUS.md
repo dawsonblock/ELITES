@@ -1,6 +1,6 @@
 # Escape the Elites — Project Status
 
-Status: **Alpha 0.5** — Playable vertical slice.
+Status: **Alpha 0.6** — Playable vertical slice; scripts, refactor, and test coverage improvements.
 
 ## Verified (Alpha 0.5)
 - Clean source package (verify:release-package passes)
@@ -15,12 +15,20 @@ Status: **Alpha 0.5** — Playable vertical slice.
 ### Test Infrastructure
 - Dev e2e tests in `e2e/dev/` (use `__ETE_TEST__` hooks, never run in production)
 - Production e2e tests in `e2e/prod/` (no hooks, safe for CI against production build)
+- Stealth e2e tests: detection rise/fall, hiding zone suppression, patrol detection (`e2e/dev/stealth.spec.ts`)
+- Broadcast e2e tests: checklist UI, upload progress, sequence completion (`e2e/dev/broadcast.spec.ts`)
 - `playwright.config.ts` → dev tests; `playwright.prod.config.ts` → prod tests
 - `scripts/verify-release.mjs` — checks for forbidden artifacts before packaging
+  - Standard mode: `npm run verify:release-package`
+  - Strict mode (also checks node_modules): `npm run verify:release-package:strict`
+- `npm run clean` — removes dist, test-results, playwright-report
+- `npm run verify:full` — clean + lint + test + build + e2e (repeatable, no state bleed)
+- `npm run verify:package` — clean + artifact check
 
 ### UI Polish
-- All static inline styles extracted to `src/styles/ui.css`
-- Dynamic runtime values (detection opacity, alert tint, progress widths) remain inline as intended
+- Static inline styles progressively extracted to `src/styles/ui.css`
+- Credits overlay inline styles moved to `.credits-overlay` CSS class (Alpha 0.6)
+- Remaining acceptable dynamic inline values: detection width, alert tint, progress CSS variables, grid-area layout in MobileControls, importance border color in EvidenceBoard
 - CSS class names follow BEM-style conventions throughout
 
 ### Gameplay
