@@ -1,4 +1,4 @@
-export function CreditsOverlay({ onClose }: { onClose: () => void }): JSX.Element {
+export function CreditsOverlay({ onClose }: { onClose: () => void }) {
   return (
     <div className="credits-overlay">
       <h2>Credits</h2>

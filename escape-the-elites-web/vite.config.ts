@@ -10,12 +10,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     sourcemap: mode === 'development',
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 2000, // PlayCanvas 2.x chunk is ~1.9MB gzip: 488kB
     rollupOptions: {
       output: {
-        manualChunks: {
-          playcanvas: ['playcanvas'],
-          react: ['react', 'react-dom']
+        // Rolldown (Vite 8) requires manualChunks as a function, not an object
+        manualChunks(id) {
+          if (id.includes('node_modules/playcanvas')) return 'playcanvas';
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'react';
         }
       }
     }

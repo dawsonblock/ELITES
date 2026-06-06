@@ -170,9 +170,10 @@ export class SceneBuilder {
     };
     const preset = sceneDefs[id];
 
-    this.app.scene.fog = pc.FOG_EXP2;
-    this.app.scene.fogColor = new pc.Color(...preset.fogColor);
-    this.app.scene.fogDensity = preset.fogDensity;
+    // PlayCanvas 2.x: scene.fog is a FogParams object, not a string property
+    this.app.scene.fog.type = pc.FOG_EXP2;
+    this.app.scene.fog.color = new pc.Color(...preset.fogColor);
+    this.app.scene.fog.density = preset.fogDensity;
 
     switch (id) {
       case "dock": this.buildDock(root); break;

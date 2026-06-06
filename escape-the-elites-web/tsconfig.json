@@ -15,19 +15,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vite/client"],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@game/*": ["src/game/*"],
-      "@scenes/*": ["src/scenes/*"],
-      "@systems/*": ["src/systems/*"],
-      "@objects/*": ["src/objects/*"],
-      "@ui/*": ["src/ui/*"],
-      "@data/*": ["src/data/*"],
-      "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"]
-    }
+    "types": ["vite/client"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
