@@ -19,6 +19,7 @@ const EndingScreen = lazy(() => import("./ui/EndingScreen").then(m => ({ default
 const DocumentViewer = lazy(() => import("./ui/DocumentViewer").then(m => ({ default: m.DocumentViewer })));
 const SettingsPanel = lazy(() => import("./ui/SettingsPanel").then(m => ({ default: m.SettingsPanel })));
 const MobileControls = lazy(() => import("./ui/MobileControls").then(m => ({ default: m.MobileControls })));
+const BroadcastSequence = lazy(() => import("./ui/BroadcastSequence").then(m => ({ default: m.BroadcastSequence })));
 import { audioSystem } from "./systems/AudioSystem";
 import type { EndingType } from "./types/ending";
 import type * as pc from "playcanvas";
@@ -74,6 +75,8 @@ export default function App() {
     ManualSave3: !!loadSave("ManualSave3"),
   }));
   const [autosaveToast, setAutosaveToast] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const pendingBroadcastRef = useRef(false);
 
   const createGameCallbacks = useCallback((gameInstance?: Game) => {
     return {
@@ -285,16 +288,26 @@ export default function App() {
     };
   }, []);
 
+  const completeBroadcast = useCallback(() => {
+    gameState.setEndingFlag("broadcastComplete", true);
+    const score = endingSystem.calculateScore();
+    const end = endingSystem.determineEnding(score);
+    setEndingScore(score.total);
+    setEnding(end);
+    setBroadcastOpen(false);
+    setScreen("ending");
+    setPaused(false);
+    gameState.paused = false;
+    inputManager.exitPointerLock();
+  }, []);
+
   useEffect(() => {
     const onBroadcast = () => {
-      gameState.setEndingFlag("broadcastComplete", true);
-      const score = endingSystem.calculateScore();
-      const end = endingSystem.determineEnding(score);
-      setEndingScore(score.total);
-      setEnding(end);
-      setScreen("ending");
-      setPaused(false);
-      gameState.paused = false;
+      if (pendingBroadcastRef.current) return;
+      pendingBroadcastRef.current = true;
+      setBroadcastOpen(true);
+      // Freeze game input during broadcast sequence
+      gameState.terminalOpen = true;
       inputManager.exitPointerLock();
     };
     const unsub = eventBus.on(GameEvents.BROADCAST_UPLOAD, onBroadcast);
@@ -306,6 +319,8 @@ export default function App() {
     setPaused(false);
     setEvidenceBoardOpen(false);
     setTerminalOpen(false);
+    setBroadcastOpen(false);
+    pendingBroadcastRef.current = false;
     setEnding(null);
     gameState.resetProgress();
     gameState.paused = false;
@@ -424,6 +439,15 @@ export default function App() {
           </Suspense>
           <Suspense fallback={null}>
             <MobileControls />
+          </Suspense>
+          <Suspense fallback={null}>
+            <BroadcastSequence
+              open={broadcastOpen}
+              onComplete={() => {
+                pendingBroadcastRef.current = false;
+                completeBroadcast();
+              }}
+            />
           </Suspense>
           <PauseMenu
             open={paused}

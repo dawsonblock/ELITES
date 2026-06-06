@@ -3,6 +3,7 @@
     "id": "bad",
     "title": "The Story Dies",
     "description": "You escaped, but the evidence never made it out. The island continues unchanged.",
+    "explanation": "The broadcast failed — either you didn't initiate it, or the evidence was too thin to verify. Without a credible archive, the story was suppressed before it could reach any journalist willing to act.",
     "conditions": {
       "broadcastComplete": false,
       "requiredEvidencePercent": 0,
@@ -13,6 +14,7 @@
     "newsSegments": [
       "No confirmed reports from the offshore facility.",
       "Authorities decline to comment on alleged island network.",
+      "Anonymous tip received but unverifiable — no documentation recovered.",
       "The signal was lost before confirmation."
     ]
   },
@@ -20,6 +22,7 @@
     "id": "partial",
     "title": "A Glimmer of Doubt",
     "description": "The broadcast went out, but the evidence was incomplete. An investigation begins, yet the network adapts.",
+    "explanation": "You managed to broadcast something, but the archive was missing key corroboration. Reporters are cautious — the story runs, but without the critical documents it gets dismissed as speculation by those with the most to lose.",
     "conditions": {
       "broadcastComplete": true,
       "requiredEvidencePercent": 40,
@@ -30,13 +33,15 @@
     "newsSegments": [
       "Breaking: anonymous broadcast claims offshore misconduct.",
       "Investigation opened, but key evidence remains unverified.",
-      "Network representatives deny all allegations."
+      "Network representatives deny all allegations.",
+      "Source has not been identified. Credibility questioned."
     ]
   },
   {
     "id": "best",
     "title": "The Broadcast",
-    "description": "The evidence chain was strong enough. Coordinated action follows.",
+    "description": "The evidence chain was complete. Coordinated action follows across multiple jurisdictions.",
+    "explanation": "The full archive — server records, security feeds, guest logs, financial traces — created an irrefutable chain of evidence. Fourteen journalists received verified copies simultaneously. The network had no time to suppress it.",
     "conditions": {
       "broadcastComplete": true,
       "requiredEvidencePercent": 75,
@@ -45,15 +50,17 @@
       "needsGuestLog": true
     },
     "newsSegments": [
-      "Breaking: extensive evidence broadcast from offshore facility.",
-      "Authorities confirm coordinated action against network.",
-      "Multiple arrests reported across several jurisdictions."
+      "Breaking: verified evidence archive broadcast from offshore facility.",
+      "Authorities confirm coordinated action against network operatives.",
+      "Multiple arrests reported across three jurisdictions.",
+      "Financial records show links to fourteen shell companies."
     ]
   },
   {
     "id": "secret",
     "title": "One Node",
-    "description": "The broadcast succeeded. But the final fragment showed the truth: the island was only one node.",
+    "description": "The broadcast succeeded. But the final fragment revealed the truth: the island was only one node in a larger network.",
+    "explanation": "The full archive was broadcast, including the redacted memo marked NODE-7. Investigators are now working to identify the other nodes. The island facility is shut down — but the wider network is still operating.",
     "conditions": {
       "broadcastComplete": true,
       "requiredEvidencePercent": 75,
@@ -64,9 +71,10 @@
       "needsAllCorroboration": true
     },
     "newsSegments": [
-      "Breaking: extensive evidence broadcast from offshore facility.",
-      "Authorities confirm coordinated action against network.",
-      "Leaked fragment references additional sites. Scope unknown."
+      "Breaking: verified evidence archive broadcast from offshore facility.",
+      "Authorities confirm coordinated action. Arrests ongoing.",
+      "Classified fragment references additional sites. Scope unknown.",
+      "Investigators confirm the island was one of at least seven nodes."
     ]
   }
 ]

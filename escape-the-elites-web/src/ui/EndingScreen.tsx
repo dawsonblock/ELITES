@@ -20,17 +20,22 @@ export const EndingScreen: FC<Props> = ({ ending, score, onRestart, onMenu }) =>
         <h1 className="ending-title">{def.title}</h1>
         <p className="ending-description">{def.description}</p>
 
-        <div className="ui-panel ending-score-panel">
-          <div className="ending-score-label">Evidence Score</div>
-          <div className="ending-score-value">{Math.round(score)}%</div>
-        </div>
-
         <div className="ending-segments">
           {def.newsSegments.map((seg, i) => (
             <div key={i} className="ending-segment">
               <div className="ending-segment-text">{seg}</div>
             </div>
           ))}
+        </div>
+
+        <div className="ui-panel ending-explanation">
+          <div className="ending-explanation-label">What happened</div>
+          <p className="ending-explanation-text">{def.explanation}</p>
+        </div>
+
+        <div className="ui-panel ending-score-panel">
+          <div className="ending-score-label">Evidence Score</div>
+          <div className="ending-score-value">{Math.round(score)}%</div>
         </div>
 
         <div className="ending-actions">

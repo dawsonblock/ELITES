@@ -1011,3 +1011,230 @@
   padding: 4px 10px;
   font-size: 0.75rem;
 }
+
+/* ─── Broadcast Sequence ────────────────────────────────────────────── */
+.broadcast-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 2, 6, 0.97);
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Checklist stage */
+.broadcast-checklist-panel {
+  width: 100%;
+  max-width: 560px;
+}
+
+.broadcast-checklist-header {
+  margin-bottom: 24px;
+}
+
+.broadcast-checklist-title {
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+}
+
+.broadcast-checklist-subtitle {
+  font-size: 0.875rem;
+  color: #6b6b7b;
+  margin: 0;
+}
+
+.broadcast-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.broadcast-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.broadcast-item-have {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.broadcast-item-missing {
+  background: rgba(255,255,255,0.02);
+  opacity: 0.5;
+}
+
+.broadcast-item-icon {
+  font-weight: 700;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.broadcast-item-have .broadcast-item-icon { color: #22c55e; }
+.broadcast-item-missing .broadcast-item-icon { color: #ef4444; }
+
+.broadcast-item-label {
+  flex: 1;
+}
+
+.broadcast-item-badge {
+  font-size: 0.65rem;
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.broadcast-readiness {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.broadcast-ready-full {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.broadcast-ready-partial {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.broadcast-ready-minimal {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.broadcast-checklist-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.broadcast-confirm-btn {
+  background: #ef4444;
+}
+
+.broadcast-confirm-btn:hover {
+  background: #dc2626;
+}
+
+/* Upload stage */
+.broadcast-upload-panel {
+  width: 100%;
+  max-width: 560px;
+}
+
+.broadcast-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.broadcast-upload-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.1em;
+}
+
+.broadcast-upload-pct {
+  font-size: 0.875rem;
+  color: #e8e8ec;
+}
+
+.broadcast-progress-track {
+  width: 100%;
+  height: 6px;
+  background: #1f1f28;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.broadcast-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.broadcast-log {
+  height: 240px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #1f1f28;
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.broadcast-log-line {
+  font-size: 0.8rem;
+  color: #6b6b7b;
+  line-height: 1.5;
+}
+
+.broadcast-log-line-active {
+  color: #a0a0b0;
+}
+
+/* Done stage */
+.broadcast-done {
+  text-align: center;
+}
+
+.broadcast-done-marker {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.15em;
+  margin-bottom: 16px;
+}
+
+.broadcast-done-note {
+  color: #6b6b7b;
+  font-size: 0.875rem;
+}
+
+/* ─── Ending Screen — explanation ───────────────────────────────────── */
+.ending-explanation {
+  margin-bottom: 16px;
+}
+
+.ending-explanation-label {
+  font-size: 0.75rem;
+  color: #6b6b7b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.ending-explanation-text {
+  font-size: 0.875rem;
+  color: #a0a0b0;
+  line-height: 1.6;
+  margin: 0;
+}

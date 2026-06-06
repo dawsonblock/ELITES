@@ -4,6 +4,7 @@ export type EndingDefinition = {
   id: EndingType;
   title: string;
   description: string;
+  explanation: string;
   conditions: {
     broadcastComplete: boolean;
     requiredEvidencePercent: number;
