@@ -1,28 +1,21 @@
-# Escape the Elites — Current Status
+# Escape the Elites — Project Status
 
-Status: Alpha vertical slice.
+Status: Alpha 0.3 technical demo.
 
-## Known stable
+## Verified
 - npm ci works from clean source
 - npm run lint passes
-- npm test passes (24 tests across 4 files)
+- npm test passes: 30/30 tests
 - npm run build passes
-- Core progression data validates
-- Server archive download now collects evidence
-- Bunker code uses player-visible 7391
-- Dynamic imports split PlayCanvas from main bundle
-- Source maps disabled in production
-- Unused dependency (zustand) removed
+- Playwright tests exist
+- Game.ts refactored into smaller systems
+- Save validation rejects corrupted saves
+- Dev test hooks do not appear in production build
 
 ## Not release-ready
-- Gameplay is mostly greybox/procedural
-- No browser-level playthrough tests
-- Save/load needs full browser validation
-- Stealth is shallow
-- Asset pipeline is missing
-- Dependency audit has vulnerabilities
-- Game.ts is still ~495 lines (target: <250 after extraction)
-- Scattered `as any` metadata on PlayCanvas entities
-- No real asset pipeline (only primitive boxes)
-- Mobile controls exist but need more testing
-- First 5-minute route needs environmental storytelling polish
+- E2E tests mostly use dev server
+- Real player full-route test is missing
+- Gameplay is still mostly greybox
+- Stealth depth is shallow
+- Asset pipeline is incomplete
+- npm audit has unresolved vulnerabilities

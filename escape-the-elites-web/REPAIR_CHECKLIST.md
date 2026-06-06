@@ -1,16 +1,18 @@
 # Repair Checklist
 
-## Critical
-- [ ] Add Playwright browser playthrough tests
-- [ ] Validate save/load after scene transition
-- [ ] Validate continue game from menu
-- [ ] Validate broadcast ending from real UI path
-- [ ] Add no-pointer-lock fallback
-- [ ] Add release build smoke test
+## Critical Remaining
+- [ ] Fix callback ordering before Game.init()
+- [ ] Unify start/continue callbacks
+- [ ] Fix unknown evidence ID poisoning
+- [ ] Remove collected evidence props immediately
+- [ ] Add production-preview e2e test
+- [ ] Add real terminal/download e2e test
+- [ ] Fix stale docs
+- [ ] Document/fix npm audit vulnerabilities
 
 ## Architecture
-- [ ] Split Game.ts (target <250 lines)
-- [ ] Split App.tsx
+- [x] Split Game.ts (target <250 lines)
+- [x] Split App.tsx callback logic
 - [ ] Move interactable metadata away from `as any`
 - [ ] Add typed command handlers
 
