@@ -67,10 +67,11 @@ class GameStateManager {
   }
 
   collectEvidence(id: string): boolean {
+    const item = this._evidence.get(id);
+    if (!item) return false;
     if (this._collectedEvidence.has(id)) return false;
     this._collectedEvidence.add(id);
-    const item = this._evidence.get(id);
-    if (item) item.discovered = true;
+    item.discovered = true;
     return true;
   }
 
