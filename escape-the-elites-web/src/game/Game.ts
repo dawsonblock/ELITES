@@ -13,6 +13,7 @@ import { PlayerController } from "./controllers/PlayerController";
 import { InteractionSystem } from "./interactions/InteractionSystem";
 import { DoorSystem } from "./world/DoorSystem";
 import { StealthSystem, PatrolEnemy } from "./stealth/StealthSystem";
+import { assetLoader } from "../systems/AssetLoader";
 
 export type GameCallbacks = {
   onReady?: () => void;
@@ -58,6 +59,10 @@ export class Game {
     this.playerController = new PlayerController(app);
     this.interactionSystem.cameraEntity = this.playerController.cameraEntity;
     this.stealthSystem.setEntities(this.sceneRoot, this.playerController.playerEntity);
+
+    // Initialize asset loader — graceful no-op if GLBs not present
+    assetLoader.init(app).catch(() => {/* expected in vertical slice */});
+
     this.loadScene("dock");
 
     app.on("update", (dt) => this.update(dt));
@@ -238,6 +243,7 @@ export class Game {
     this.interactionSystem.dispose();
     this.stealthSystem.dispose();
     this.doorSystem?.dispose();
+    assetLoader.dispose();
     this.doorSystem = null;
     if (this.resizeHandler) {
       window.removeEventListener("resize", this.resizeHandler);
