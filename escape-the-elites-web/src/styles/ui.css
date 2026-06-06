@@ -1174,6 +1174,7 @@
 
 .broadcast-progress-fill {
   height: 100%;
+  width: var(--broadcast-progress, 0%);
   background: linear-gradient(90deg, #ef4444, #f97316);
   border-radius: 3px;
   transition: width 0.4s ease;

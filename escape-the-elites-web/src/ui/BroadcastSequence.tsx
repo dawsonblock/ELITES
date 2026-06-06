@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { gameState } from "../game/GameState";
 import type { EvidenceItem } from "../types/evidence";
 
@@ -7,13 +7,6 @@ type Stage = "checklist" | "uploading" | "done";
 type Props = {
   open: boolean;
   onComplete: () => void;
-};
-
-type CheckItem = {
-  id: string;
-  label: string;
-  required: boolean;
-  has: boolean;
 };
 
 const UPLOAD_LOG_LINES = [
@@ -61,15 +54,18 @@ export const BroadcastSequence: React.FC<Props> = ({ open, onComplete }) => {
       });
     }, 500);
 
+    let stageTimeout: ReturnType<typeof setTimeout>;
+    let completeTimeout: ReturnType<typeof setTimeout>;
+
     const logInterval = setInterval(() => {
       setLogIndex((i) => {
         const next = i + 1;
         setUploadLog((prev) => [...prev, UPLOAD_LOG_LINES[i] ?? ""]);
         if (next >= UPLOAD_LOG_LINES.length) {
           clearInterval(logInterval);
-          setTimeout(() => {
+          stageTimeout = setTimeout(() => {
             setStage("done");
-            setTimeout(onComplete, 1800);
+            completeTimeout = setTimeout(onComplete, 1800);
           }, 1000);
         }
         return next;
@@ -79,20 +75,24 @@ export const BroadcastSequence: React.FC<Props> = ({ open, onComplete }) => {
     return () => {
       clearInterval(progressInterval);
       clearInterval(logInterval);
+      clearTimeout(stageTimeout);
+      clearTimeout(completeTimeout);
     };
   }, [stage, onComplete]);
 
   if (!open) return null;
 
-  const allEvidence = gameState.allEvidence();
-  const checkItems: CheckItem[] = allEvidence
-    .filter((e: EvidenceItem) => e.requiredForBestEnding || e.importance >= 3)
-    .map((e: EvidenceItem) => ({
-      id: e.id,
-      label: e.title,
-      required: e.requiredForBestEnding,
-      has: gameState.hasEvidence(e.id),
-    }));
+  const checkItems = useMemo(() => {
+    const allEvidence = gameState.allEvidence();
+    return allEvidence
+      .filter((e: EvidenceItem) => e.requiredForBestEnding || e.importance >= 3)
+      .map((e: EvidenceItem) => ({
+        id: e.id,
+        label: e.title,
+        required: e.requiredForBestEnding,
+        has: gameState.hasEvidence(e.id),
+      }));
+  }, []);
 
   const hasMinimum = checkItems.some((c) => c.has);
   const hasRequired = checkItems.filter((c) => c.required).every((c) => c.has);
@@ -121,7 +121,7 @@ export const BroadcastSequence: React.FC<Props> = ({ open, onComplete }) => {
           <div className="broadcast-progress-track">
             <div
               className="broadcast-progress-fill"
-              style={{ width: `${uploadProgress}%` }}
+              style={{ "--broadcast-progress": `${uploadProgress}%` } as React.CSSProperties}
             />
           </div>
           <div className="broadcast-log">
