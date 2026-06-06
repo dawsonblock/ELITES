@@ -26,6 +26,18 @@ function broadcastReadiness(collected: EvidenceItem[]): number {
   return Math.round(reqPct * 0.6 + optPct * 0.2 + corPct * 0.15 + 5); // stealth bonus placeholder
 }
 
+function readinessColorClass(pct: number): string {
+  if (pct >= 75) return "readiness-high";
+  if (pct >= 40) return "readiness-mid";
+  return "readiness-low";
+}
+
+function importanceBorderColor(importance: number): string {
+  if (importance >= 4) return "#ef4444";
+  if (importance >= 3) return "#f59e0b";
+  return "#3b82f6";
+}
+
 export const EvidenceBoard: React.FC<Props> = ({ open, onClose, onViewEvidence }) => {
   const [, setTick] = useState(0);
 
@@ -44,60 +56,39 @@ export const EvidenceBoard: React.FC<Props> = ({ open, onClose, onViewEvidence }
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: "rgba(5,5,8,0.92)",
-        zIndex: 60,
-        display: "flex",
-        flexDirection: "column",
-        padding: 32,
-        overflow: "auto",
-      }}
-      onClick={onClose}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: "1.5rem" }}>Evidence Board</h2>
+    <div className="evidence-board-overlay" onClick={onClose}>
+      <div className="evidence-board-header">
+        <h2 className="evidence-board-title">Evidence Board</h2>
         <button className="ui-button secondary" onClick={onClose}>Close</button>
       </div>
 
-      <div className="ui-panel" style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="ui-panel evidence-readiness">
+        <div className="evidence-readiness-row">
           <span>Broadcast Readiness</span>
-          <span style={{ fontSize: "1.25rem", fontWeight: 700, color: readiness >= 75 ? "#22c55e" : readiness >= 40 ? "#f59e0b" : "#ef4444" }}>
+          <span className={`evidence-readiness-value ${readinessColorClass(readiness)}`}>
             {readiness}%
           </span>
         </div>
-        <div style={{ marginTop: 8, fontSize: "0.875rem", color: "#6b6b7b" }}>
+        <div className="evidence-readiness-missing">
           Missing required evidence: {missing.length > 0 ? missing.map((m) => m.title).join(", ") : "None"}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+      <div className="evidence-grid">
         {gameState.allEvidence().map((ev) => {
           const has = gameState.hasEvidence(ev.id);
           return (
             <div
               key={ev.id}
-              className="ui-panel"
+              className={`ui-panel evidence-card ${has ? "evidence-card-collected" : "evidence-card-undiscovered"}`}
               onClick={() => has && onViewEvidence?.(ev.id)}
-              style={{
-                opacity: has ? 1 : 0.4,
-                borderLeft: `3px solid ${
-                  ev.importance >= 4 ? "#ef4444" : ev.importance >= 3 ? "#f59e0b" : "#3b82f6"
-                }`,
-                cursor: has ? "pointer" : "default",
-                transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onMouseEnter={(e) => has && (e.currentTarget.style.transform = "translateY(-2px)")}
-              onMouseLeave={(e) => has && (e.currentTarget.style.transform = "translateY(0)")}
+              style={{ borderLeft: `3px solid ${importanceBorderColor(ev.importance)}` }}
             >
-              <div style={{ fontSize: "0.75rem", color: "#6b6b7b", textTransform: "uppercase", marginBottom: 4 }}>{ev.type}</div>
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>{has ? ev.title : "???"}</div>
-              <div style={{ fontSize: "0.8rem", color: "#90909e" }}>{has ? ev.summary : "Not yet discovered."}</div>
+              <div className="evidence-card-type">{ev.type}</div>
+              <div className="evidence-card-name">{has ? ev.title : "???"}</div>
+              <div className="evidence-card-summary">{has ? ev.summary : "Not yet discovered."}</div>
               {has && ev.corroborates.length > 0 && (
-                <div style={{ marginTop: 8, fontSize: "0.75rem", color: "#3b82f6" }}>
+                <div className="evidence-card-corroborates">
                   Corroborates: {ev.corroborates.map((c) => gameState.getEvidence(c)?.title || c).join(", ")}
                 </div>
               )}

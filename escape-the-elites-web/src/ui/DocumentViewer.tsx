@@ -174,74 +174,33 @@ export const DocumentViewer: React.FC<Props> = ({ evidence, open, onClose }) => 
   if (!open || !evidence) return null;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: "rgba(3, 3, 6, 0.94)",
-        zIndex: 75,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 32,
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="ui-panel"
-        style={{
-          width: "100%",
-          maxWidth: 640,
-          maxHeight: "80vh",
-          display: "flex",
-          flexDirection: "column",
-          fontFamily: "'Courier New', monospace",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+    <div className="doc-viewer-overlay" onClick={onClose}>
+      <div className="ui-panel doc-viewer-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="doc-viewer-header">
           <div>
-            <div style={{ fontSize: "0.75rem", color: "#6b6b7b", textTransform: "uppercase", marginBottom: 4 }}>{evidence.type}</div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>{evidence.title}</div>
+            <div className="doc-viewer-type">{evidence.type}</div>
+            <div className="doc-viewer-title">{evidence.title}</div>
           </div>
-          <button className="ui-button secondary" onClick={onClose} style={{ padding: "6px 12px", fontSize: "0.8rem" }}>Close</button>
+          <button className="ui-button secondary doc-viewer-close-btn" onClick={onClose}>Close</button>
         </div>
 
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            background: "rgba(0,0,0,0.4)",
-            border: "1px solid #1f1f28",
-            borderRadius: 4,
-            padding: 20,
-            fontSize: "0.875rem",
-            lineHeight: 1.7,
-            color: "#c8c8d0",
-            whiteSpace: "pre-wrap",
-          }}
-        >
+        <div className="doc-viewer-body">
           {display}
-          {!done && <span style={{ animation: "blink 1s step-end infinite", color: "#3b82f6" }}>|</span>}
+          {!done && <span className="doc-viewer-cursor">|</span>}
         </div>
 
         {evidence.corroborates.length > 0 && (
-          <div style={{ marginTop: 12, fontSize: "0.8rem", color: "#3b82f6" }}>
+          <div className="doc-viewer-corroborates">
             Corroborates: {evidence.corroborates.join(", ")}
           </div>
         )}
 
-        <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="doc-viewer-tags">
           {evidence.tags.map((t) => (
-            <span key={t} style={{ fontSize: "0.7rem", color: "#6b6b7b", background: "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: 4 }}>{t}</span>
+            <span key={t} className="doc-viewer-tag">{t}</span>
           ))}
         </div>
       </div>
-
-      <style>{`
-        @keyframes blink { 50% { opacity: 0; } }
-      `}</style>
     </div>
   );
 };

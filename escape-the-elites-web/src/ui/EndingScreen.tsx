@@ -14,38 +14,26 @@ export const EndingScreen: FC<Props> = ({ ending, score, onRestart, onMenu }) =>
   if (!def) return null;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: "#020205",
-        zIndex: 110,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 32,
-      }}
-    >
-      <div style={{ maxWidth: 640, width: "100%" }}>
-        <div style={{ fontSize: "0.75rem", color: "#ef4444", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>BREAKING</div>
-        <h1 style={{ fontSize: "2rem", marginBottom: 16 }}>{def.title}</h1>
-        <p style={{ color: "#a0a0b0", lineHeight: 1.6, marginBottom: 32 }}>{def.description}</p>
+    <div className="ending-overlay">
+      <div className="ending-content">
+        <div className="ending-breaking">BREAKING</div>
+        <h1 className="ending-title">{def.title}</h1>
+        <p className="ending-description">{def.description}</p>
 
-        <div className="ui-panel" style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: "0.875rem", color: "#6b6b7b", marginBottom: 8 }}>Evidence Score</div>
-          <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{Math.round(score)}%</div>
+        <div className="ui-panel ending-score-panel">
+          <div className="ending-score-label">Evidence Score</div>
+          <div className="ending-score-value">{Math.round(score)}%</div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32 }}>
+        <div className="ending-segments">
           {def.newsSegments.map((seg, i) => (
-            <div key={i} style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 6, borderLeft: "3px solid #ef4444" }}>
-              <div style={{ fontSize: "0.875rem" }}>{seg}</div>
+            <div key={i} className="ending-segment">
+              <div className="ending-segment-text">{seg}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        <div className="ending-actions">
           <button className="ui-button" onClick={onRestart}>Replay</button>
           <button className="ui-button secondary" onClick={onMenu}>Main Menu</button>
         </div>

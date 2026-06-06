@@ -42,108 +42,39 @@ export const ScreenEffects: React.FC = () => {
     };
   }, []);
 
-  // Detection-based vignette intensity
+  // Detection-based vignette intensity — runtime value, kept as inline style
   const vignetteOpacity = Math.min(detectionValue / 120, 0.55);
+
+  // Alert tint — runtime value based on alert state
   const alertTint = alertState === "full_lockdown" ? "rgba(180, 20, 20," :
     alertState === "local_alert" ? "rgba(180, 100, 20," :
     alertState === "suspicious" ? "rgba(180, 160, 20," :
     "rgba(20, 20, 40,";
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-        zIndex: 5,
-        mixBlendMode: "multiply",
-      }}
-    >
-      {/* Vignette */}
+    <div className="screen-effects">
+      {/* Vignette — opacity is runtime */}
       <div
+        className="screen-vignette"
         style={{
-          position: "absolute",
-          inset: 0,
           background: `radial-gradient(circle at center, transparent 50%, rgba(0,0,0,${0.4 + vignetteOpacity}) 100%)`,
-          transition: "background 0.3s ease",
         }}
       />
 
-      {/* Alert tint overlay */}
+      {/* Alert tint — color and opacity are runtime */}
       {(alertState !== "normal" || detectionValue > 30) && (
         <div
+          className="screen-alert-tint"
           style={{
-            position: "absolute",
-            inset: 0,
             background: `${alertTint}${Math.min(detectionValue / 100, 0.25)})`,
-            transition: "background 0.4s ease",
-            mixBlendMode: "overlay",
           }}
         />
       )}
 
-      {/* Lockdown pulse */}
-      {lockdownPulse && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(180, 20, 20, 0.15)",
-            animation: "lockdownPulse 0.5s ease-in-out 6",
-          }}
-        />
-      )}
-
-      {/* Evidence collection flash */}
-      {evidenceFlash && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(59, 130, 246, 0.08)",
-            transition: "opacity 0.15s ease",
-          }}
-        />
-      )}
-
-      {/* Detection edge warning */}
-      {detectionState === "critical" && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            boxShadow: "inset 0 0 60px rgba(220, 40, 40, 0.4)",
-            animation: "pulseBorder 0.6s ease-in-out infinite",
-          }}
-        />
-      )}
-
-      {/* Detected red flash */}
-      {detectionState === "detected" && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(180, 20, 20, 0.2)",
-            animation: "detectedFlash 0.3s ease-in-out infinite",
-          }}
-        />
-      )}
-
-      <style>{`
-        @keyframes lockdownPulse {
-          0%, 100% { opacity: 0; }
-          50% { opacity: 1; }
-        }
-        @keyframes pulseBorder {
-          0%, 100% { box-shadow: inset 0 0 40px rgba(220, 40, 40, 0.3); }
-          50% { box-shadow: inset 0 0 80px rgba(220, 40, 40, 0.6); }
-        }
-        @keyframes detectedFlash {
-          0%, 100% { opacity: 0.15; }
-          50% { opacity: 0.35; }
-        }
-      `}</style>
+      {lockdownPulse && <div className="screen-lockdown-pulse" />}
+      {evidenceFlash && <div className="screen-evidence-flash" />}
+      {detectionState === "critical" && <div className="screen-detection-critical" />}
+      {detectionState === "detected" && <div className="screen-detection-detected" />}
     </div>
   );
 };

@@ -79,7 +79,7 @@ The `dist/` folder is ready for static hosting (Netlify, Vercel, Cloudflare Page
 ### Testing
 
 ```bash
-# Run all tests once
+# Run unit tests (Vitest)
 npm test
 
 # Watch mode
@@ -88,6 +88,53 @@ npm run test:watch
 # Type-check only
 npm run lint
 ```
+
+### Browser Tests
+
+Dev e2e tests run against the dev server and may use development-only hooks (`window.__ETE_TEST__`):
+
+```bash
+# Requires Playwright: npx playwright install chromium
+npm run test:e2e
+```
+
+Production e2e tests run against the built app and must not use dev hooks:
+
+```bash
+npm run test:e2e:prod
+```
+
+### Full Verification
+
+Runs the release artifact check, lint, unit tests, build, dev e2e, and prod e2e in order:
+
+```bash
+npm run verify:full
+```
+
+For a quick sanity check without e2e:
+
+```bash
+npm run verify
+```
+
+### Packaging
+
+Before creating a release ZIP, verify no forbidden artifacts are present:
+
+```bash
+npm run verify:release-package
+```
+
+Do not include these in a release package:
+
+- `node_modules/`
+- `dist/`
+- `test-results/`
+- `playwright-report/`
+- `zip-test/`
+- Nested ZIP files
+- `.DS_Store`
 
 ## Project Structure
 

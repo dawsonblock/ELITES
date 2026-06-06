@@ -77,22 +77,10 @@ export const HUD: React.FC<Props> = ({ sceneNote }) => {
 
   return (
     <div className="ui-overlay">
-      {/* Crosshair */}
+      {/* Crosshair — background is dynamic based on interact state */}
       <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          width: 4,
-          height: 4,
-          marginLeft: -2,
-          marginTop: -2,
-          borderRadius: "50%",
-          background: interact ? "rgba(59,130,246,0.8)" : "rgba(255,255,255,0.35)",
-          transition: "background 0.15s ease",
-          pointerEvents: "none",
-          zIndex: 10,
-        }}
+        className="crosshair"
+        style={{ background: interact ? "rgba(59,130,246,0.8)" : "rgba(255,255,255,0.35)" }}
       />
 
       {objective && (
@@ -115,45 +103,19 @@ export const HUD: React.FC<Props> = ({ sceneNote }) => {
 
       {notification && (
         <div className="ui-panel evidence-notification">
-          <div style={{ fontSize: "0.75rem", color: "#6b6b7b", marginBottom: 4 }}>Evidence acquired</div>
-          <div style={{ fontWeight: 600 }}>{notification.title}</div>
+          <div className="evidence-notification-label">Evidence acquired</div>
+          <div className="evidence-notification-title">{notification.title}</div>
           {notification.corroborates && (
-            <div style={{ fontSize: "0.75rem", color: "#3b82f6", marginTop: 4 }}>Corroborates: {notification.corroborates}</div>
+            <div className="evidence-notification-corroborates">Corroborates: {notification.corroborates}</div>
           )}
         </div>
       )}
 
       {localSceneNote && (
-        <div
-          style={{
-            position: "absolute",
-            top: "20%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "rgba(5,5,8,0.8)",
-            border: "1px solid #1f1f28",
-            borderRadius: 6,
-            padding: "10px 20px",
-            fontSize: "0.875rem",
-            color: "#a0a0b0",
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            animation: "fadeInOut 3s ease forwards",
-            pointerEvents: "none",
-          }}
-        >
+        <div className="scene-note">
           {localSceneNote}
         </div>
       )}
-
-      <style>{`
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: translateX(-50%) translateY(8px); }
-          15% { opacity: 1; transform: translateX(-50%) translateY(0); }
-          85% { opacity: 1; transform: translateX(-50%) translateY(0); }
-          100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-        }
-      `}</style>
     </div>
   );
 };
