@@ -171,9 +171,11 @@ class GameStateManager {
     return this._unlockedTerminals.has(id);
   }
 
-  resetProgress() {
-    this._evidence.clear();
-    this._objectives.clear();
+  resetProgress(keepDefinitions = false) {
+    if (!keepDefinitions) {
+      this._evidence.clear();
+      this._objectives.clear();
+    }
     this._collectedEvidence.clear();
     this._completedObjectives.clear();
     this._activeObjectives.clear();

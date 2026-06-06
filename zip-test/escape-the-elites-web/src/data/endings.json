@@ -1,0 +1,72 @@
+[
+  {
+    "id": "bad",
+    "title": "The Story Dies",
+    "description": "You escaped, but the evidence never made it out. The island continues unchanged.",
+    "conditions": {
+      "broadcastComplete": false,
+      "requiredEvidencePercent": 0,
+      "needsServerArchive": false,
+      "needsSecurityFeed": false,
+      "needsGuestLog": false
+    },
+    "newsSegments": [
+      "No confirmed reports from the offshore facility.",
+      "Authorities decline to comment on alleged island network.",
+      "The signal was lost before confirmation."
+    ]
+  },
+  {
+    "id": "partial",
+    "title": "A Glimmer of Doubt",
+    "description": "The broadcast went out, but the evidence was incomplete. An investigation begins, yet the network adapts.",
+    "conditions": {
+      "broadcastComplete": true,
+      "requiredEvidencePercent": 40,
+      "needsServerArchive": false,
+      "needsSecurityFeed": false,
+      "needsGuestLog": false
+    },
+    "newsSegments": [
+      "Breaking: anonymous broadcast claims offshore misconduct.",
+      "Investigation opened, but key evidence remains unverified.",
+      "Network representatives deny all allegations."
+    ]
+  },
+  {
+    "id": "best",
+    "title": "The Broadcast",
+    "description": "The evidence chain was strong enough. Coordinated action follows.",
+    "conditions": {
+      "broadcastComplete": true,
+      "requiredEvidencePercent": 75,
+      "needsServerArchive": true,
+      "needsSecurityFeed": true,
+      "needsGuestLog": true
+    },
+    "newsSegments": [
+      "Breaking: extensive evidence broadcast from offshore facility.",
+      "Authorities confirm coordinated action against network.",
+      "Multiple arrests reported across several jurisdictions."
+    ]
+  },
+  {
+    "id": "secret",
+    "title": "One Node",
+    "description": "The broadcast succeeded. But the final fragment showed the truth: the island was only one node.",
+    "conditions": {
+      "broadcastComplete": true,
+      "requiredEvidencePercent": 75,
+      "needsServerArchive": true,
+      "needsSecurityFeed": true,
+      "needsGuestLog": true,
+      "needsHiddenArchive": true,
+      "needsAllCorroboration": true
+    },
+    "newsSegments": [
+      "Breaking: extensive evidence broadcast from offshore facility.",
+      "Authorities confirm coordinated action against network.",
+      "Leaked fragment references additional sites. Scope unknown."
+    ]
+  }
+]
