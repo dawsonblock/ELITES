@@ -158,6 +158,11 @@ export class Game {
     this.interactionSystem.interact();
   }
 
+  removeInteractable(entity: pc.Entity) {
+    this.interactionSystem.removeInteractable(entity);
+    this.interactables = this.interactables.filter((item) => item !== entity);
+  }
+
   setCallbacks(cbs: GameCallbacks) {
     this.callbacks = { ...this.callbacks, ...cbs };
   }

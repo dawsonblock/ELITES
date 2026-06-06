@@ -29,7 +29,7 @@ export class InteractionSystem {
     if (best) {
       const data = getInteractableMeta(best);
       if (data) {
-        eventBus.emit(GameEvents.INTERACT_TARGET, { type: data.type, label: data.label });
+        eventBus.emit(GameEvents.INTERACT_TARGET, { type: data.type, label: data.label, entity: best });
       }
     } else {
       eventBus.emit(GameEvents.INTERACT_TARGET, null);
@@ -56,7 +56,12 @@ export class InteractionSystem {
 
     if (!best) return;
     const data = getInteractableMeta(best);
-    eventBus.emit(GameEvents.INTERACT_TRIGGER, data);
+    eventBus.emit(GameEvents.INTERACT_TRIGGER, { ...data, entity: best });
+  }
+
+  removeInteractable(entity: pc.Entity): void {
+    this.interactables = this.interactables.filter((item) => item !== entity);
+    entity.destroy();
   }
 
   dispose() {

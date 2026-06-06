@@ -21,6 +21,7 @@ const SettingsPanel = lazy(() => import("./ui/SettingsPanel").then(m => ({ defau
 const MobileControls = lazy(() => import("./ui/MobileControls").then(m => ({ default: m.MobileControls })));
 import { audioSystem } from "./systems/AudioSystem";
 import type { EndingType } from "./types/ending";
+import type * as pc from "playcanvas";
 import { buildSaveData, saveGame, loadSave, restoreSaveData } from "./game/SaveManager";
 import "./styles/global.css";
 import "./styles/ui.css";
@@ -145,10 +146,15 @@ export default function App() {
 
   useEffect(() => {
     const onInteract = (data: unknown) => {
-      const d = data as { type: string; label: string; meta?: Record<string, unknown> };
+      const d = data as { type: string; label: string; meta?: Record<string, unknown>; entity?: pc.Entity };
       if (d.type === "evidence" && d.meta?.evidenceId) {
-        evidenceSystem.collect(d.meta.evidenceId as string);
-        objectiveSystem.checkEvidenceGates();
+        const collected = evidenceSystem.collect(d.meta.evidenceId as string);
+        if (collected) {
+          objectiveSystem.checkEvidenceGates();
+          if (d.entity) {
+            gameRef.current?.removeInteractable(d.entity);
+          }
+        }
       } else if (d.type === "door" && d.meta?.doorId) {
         const doorId = d.meta.doorId as string;
         const needsKey = d.meta.needsKey as string | undefined;
