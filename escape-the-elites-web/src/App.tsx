@@ -51,6 +51,34 @@ export default function App() {
   }));
   const [autosaveToast, setAutosaveToast] = useState(false);
 
+  const createGameCallbacks = useCallback((gameInstance?: Game) => {
+    return {
+      onReady: () => {
+        inputManager.requestPointerLock(canvasRef.current!);
+      },
+      onSceneChange: (sceneId: string) => {
+        gameState.sceneId = sceneId;
+        setLoadingScene(sceneId);
+        setTimeout(() => setLoadingScene(null), 800);
+        if (gameInstance) {
+          const snap = gameInstance.getPlayerSnapshot();
+          const saveData = buildSaveData(snap.sceneId, "checkpoint", snap.position, [snap.pitch, snap.yaw, 0]);
+          saveGame("AutoSave", saveData);
+          setHasSave(true);
+          setSlotStates((prev) => ({ ...prev, AutoSave: true }));
+        }
+        setAutosaveToast(true);
+        setTimeout(() => setAutosaveToast(false), 1500);
+      },
+      onInteractTarget: (target: { type: string; label: string } | null) => {
+        eventBus.emit(GameEvents.INTERACT_TARGET, target);
+      },
+      onSceneEnter: (_sceneId: string, sceneName: string) => {
+        setSceneNote(sceneName);
+      },
+    };
+  }, []);
+
   const initGame = useCallback(async () => {
     if (gameRef.current || !canvasRef.current) return;
 
@@ -59,26 +87,11 @@ export default function App() {
 
     const { Game } = await import("./game/Game");
     const game = new Game();
+    game.setCallbacks(createGameCallbacks(game));
     game.init(canvasRef.current);
-    game.setCallbacks({
-      onReady: () => {
-        inputManager.requestPointerLock(canvasRef.current!);
-      },
-      onSceneChange: (sceneId) => {
-        gameState.sceneId = sceneId;
-        setLoadingScene(sceneId);
-        setTimeout(() => setLoadingScene(null), 800);
-      },
-      onInteractTarget: (target) => {
-        eventBus.emit(GameEvents.INTERACT_TARGET, target);
-      },
-      onSceneEnter: (_sceneId, sceneName) => {
-        setSceneNote(sceneName);
-      },
-    });
 
     gameRef.current = game;
-  }, []);
+  }, [createGameCallbacks]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -284,31 +297,8 @@ export default function App() {
       restoreSaveData(data);
       const { Game } = await import("./game/Game");
       const game = new Game();
+      game.setCallbacks(createGameCallbacks(game));
       game.init(canvasRef.current);
-      game.setCallbacks({
-        onReady: () => {
-          inputManager.requestPointerLock(canvasRef.current!);
-        },
-        onSceneChange: (sceneId) => {
-          gameState.sceneId = sceneId;
-          setLoadingScene(sceneId);
-          setTimeout(() => setLoadingScene(null), 800);
-          // Auto-save on scene transition
-          const snap = game.getPlayerSnapshot();
-          const saveData = buildSaveData(snap.sceneId, "checkpoint", snap.position, [snap.pitch, snap.yaw, 0]);
-          saveGame("AutoSave", saveData);
-          setHasSave(true);
-          setSlotStates((prev) => ({ ...prev, AutoSave: true }));
-          setAutosaveToast(true);
-          setTimeout(() => setAutosaveToast(false), 1500);
-        },
-        onInteractTarget: (target) => {
-          eventBus.emit(GameEvents.INTERACT_TARGET, target);
-        },
-        onSceneEnter: (_sceneId, sceneName) => {
-          setSceneNote(sceneName);
-        },
-      });
       gameRef.current = game;
       game.loadPlayerSnapshot({
         sceneId: data.sceneId,
