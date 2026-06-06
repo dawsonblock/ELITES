@@ -207,6 +207,8 @@ export default function App() {
         setTerminalOpen(true);
         gameState.terminalOpen = true;
         inputManager.exitPointerLock();
+      } else if (d.type === "note" && d.meta?.note) {
+        eventBus.emit(GameEvents.SYSTEM_MESSAGE, d.meta.note as string);
       }
     };
 
