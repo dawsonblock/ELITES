@@ -5,7 +5,7 @@ import { gameState } from "./GameState";
 import { eventBus } from "../utils/eventBus";
 import { Timer } from "../utils/timers";
 import type { AABB } from "../utils/collision";
-import { getTriggerMeta } from "../utils/entityMeta";
+import { getTriggerMeta, getInteractableMeta } from "../utils/entityMeta";
 import { audioSystem } from "../systems/AudioSystem";
 import { SceneBuilder } from "../scenes/SceneBuilder";
 import { progressionSystem } from "./ProgressionSystem";
@@ -183,6 +183,24 @@ export class Game {
       yaw: 0,
       pitch: 0,
     };
+  }
+
+  getInteractablePosition(evidenceId: string): [number, number, number] | null {
+    for (const ent of this.interactables) {
+      const meta = getInteractableMeta(ent);
+      if (meta?.meta?.evidenceId === evidenceId) {
+        const pos = ent.getPosition();
+        return [pos.x, pos.y, pos.z];
+      }
+    }
+    return null;
+  }
+
+  hasInteractable(evidenceId: string): boolean {
+    return this.interactables.some((ent) => {
+      const meta = getInteractableMeta(ent);
+      return meta?.meta?.evidenceId === evidenceId;
+    });
   }
 
   loadPlayerSnapshot(snapshot: { sceneId: string; position: [number, number, number]; yaw: number; pitch: number }) {

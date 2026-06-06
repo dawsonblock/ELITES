@@ -38,6 +38,9 @@ type EteTestHooks = {
   triggerBroadcast: () => void;
   isReady: () => boolean;
   saveToSlot: (slot: string) => void;
+  placePlayerNear: (evidenceId: string) => void;
+  hasEvidence: (id: string) => boolean;
+  isInteractablePresent: (evidenceId: string) => boolean;
   getState: () => {
     sceneId: string;
     evidence: string[];
@@ -245,6 +248,19 @@ export default function App() {
             saveGame(slot, data);
           }
         },
+        placePlayerNear: (evidenceId: string) => {
+          if (!gameRef.current) return;
+          const pos = gameRef.current.getInteractablePosition(evidenceId);
+          if (!pos) return;
+          gameRef.current.loadPlayerSnapshot({
+            sceneId: gameRef.current.getSceneId(),
+            position: [pos[0], pos[1] + 0.3, pos[2] + 1.2],
+            yaw: 180,
+            pitch: -10,
+          });
+        },
+        hasEvidence: (id: string) => gameState.hasEvidence(id),
+        isInteractablePresent: (evidenceId: string) => !!gameRef.current?.hasInteractable(evidenceId),
         getState: () => ({
           sceneId: gameState.sceneId,
           evidence: gameState.collectedEvidence(),
