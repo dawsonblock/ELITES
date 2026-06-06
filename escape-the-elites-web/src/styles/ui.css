@@ -1238,3 +1238,96 @@
   line-height: 1.6;
   margin: 0;
 }
+
+/* ─── Settings Panel — tabs and controls ───────────────────────────── */
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+.settings-tab-btn {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.settings-tab-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+}
+
+.settings-tab-btn.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* Controls remapping list */
+.settings-controls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.settings-control-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.settings-control-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.settings-control-key {
+  min-width: 80px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-family: 'Courier New', monospace;
+}
+
+.settings-control-key:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--accent);
+}
+
+.settings-control-key.rebinding {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: keyPulse 0.6s ease-in-out infinite;
+}
+
+@keyframes keyPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.settings-controls-hint {
+  font-size: 0.75rem;
+  color: #555568;
+  text-align: center;
+  margin: 4px 0 0;
+}

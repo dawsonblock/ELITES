@@ -38,3 +38,38 @@ button {
 input, select, textarea {
   font-family: inherit;
 }
+
+/* ─── Accessibility: High Contrast ─────────────────────────────────── */
+body.high-contrast {
+  --text-primary:    #ffffff;
+  --text-secondary:  #d0d0e0;
+  --bg-elevated:     #1a1a22;
+  --border:          #5a5a70;
+  --accent:          #5aaaff;
+  --accent-hover:    #3a90ff;
+  --danger:          #ff6060;
+  --success:         #55dd88;
+  --warning:         #ffb840;
+}
+
+body.high-contrast .ui-panel {
+  border-width: 2px;
+}
+
+body.high-contrast .ui-button {
+  outline: 2px solid transparent;
+}
+
+body.high-contrast .ui-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Accessibility: Reduce Motion ─────────────────────────────────── */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
