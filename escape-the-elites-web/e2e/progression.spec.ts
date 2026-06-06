@@ -9,6 +9,8 @@ test("full route: collect evidence and reach ending", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /Start/i }).click();
   await expect(page.locator("canvas.game-canvas.visible")).toBeVisible();
+  const hasHooks = await page.evaluate(() => !!(window as any).__ETE_TEST__);
+  test.skip(!hasHooks, "Dev test hooks not available in production build");
   await waitForTestHooks(page);
 
   // Collect service map in dock, then transition to service entrance
@@ -57,6 +59,8 @@ test("save and continue restores state after reload", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /Start/i }).click();
   await expect(page.locator("canvas.game-canvas.visible")).toBeVisible();
+  const hasHooks = await page.evaluate(() => !!(window as any).__ETE_TEST__);
+  test.skip(!hasHooks, "Dev test hooks not available in production build");
   await waitForTestHooks(page);
 
   // Collect some evidence and save
@@ -89,6 +93,8 @@ test("best ending is reachable with full evidence", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /Start/i }).click();
   await expect(page.locator("canvas.game-canvas.visible")).toBeVisible();
+  const hasHooks = await page.evaluate(() => !!(window as any).__ETE_TEST__);
+  test.skip(!hasHooks, "Dev test hooks not available in production build");
   await waitForTestHooks(page);
 
   // Collect all evidence for best ending

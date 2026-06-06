@@ -10,7 +10,9 @@
     "test": "vitest run --exclude e2e",
     "test:watch": "vitest --exclude e2e",
     "test:e2e": "playwright test",
-    "test:all": "npm run lint && npm test && npm run build && npm run test:e2e",
+    "test:e2e:prod": "npm run build && playwright test --config playwright.prod.config.ts",
+    "verify": "npm run lint && npm test && npm run build",
+    "verify:full": "npm run lint && npm test && npm run build && npm run test:e2e && npm run test:e2e:prod",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
