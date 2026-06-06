@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Game } from "./game/Game";
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from "react";
+import type { Game } from "./game/Game";
 import { gameState } from "./game/GameState";
 import { inputManager } from "./game/InputManager";
 import { eventBus } from "./utils/eventBus";
@@ -9,15 +9,16 @@ import { objectiveSystem } from "./systems/ObjectiveSystem";
 import { endingSystem } from "./systems/EndingSystem";
 import { MainMenu } from "./ui/MainMenu";
 import { HUD } from "./ui/HUD";
-import { EvidenceBoard } from "./ui/EvidenceBoard";
-import { TerminalUI } from "./ui/TerminalUI";
+const EvidenceBoard = lazy(() => import("./ui/EvidenceBoard").then(m => ({ default: m.EvidenceBoard })));
+const TerminalUI = lazy(() => import("./ui/TerminalUI").then(m => ({ default: m.TerminalUI })));
 import { PauseMenu } from "./ui/PauseMenu";
-import { SettingsPanel } from "./ui/SettingsPanel";
-import { EndingScreen } from "./ui/EndingScreen";
 import { LoadingScreen } from "./ui/LoadingScreen";
 import { ScreenEffects } from "./ui/ScreenEffects";
-import { DocumentViewer } from "./ui/DocumentViewer";
-import { MobileControls } from "./ui/MobileControls";
+
+const EndingScreen = lazy(() => import("./ui/EndingScreen").then(m => ({ default: m.EndingScreen })));
+const DocumentViewer = lazy(() => import("./ui/DocumentViewer").then(m => ({ default: m.DocumentViewer })));
+const SettingsPanel = lazy(() => import("./ui/SettingsPanel").then(m => ({ default: m.SettingsPanel })));
+const MobileControls = lazy(() => import("./ui/MobileControls").then(m => ({ default: m.MobileControls })));
 import { audioSystem } from "./systems/AudioSystem";
 import type { EndingType } from "./types/ending";
 import { buildSaveData, saveGame, loadSave, restoreSaveData } from "./game/SaveManager";
@@ -43,12 +44,13 @@ export default function App() {
   const [viewingEvidence, setViewingEvidence] = useState<string | null>(null);
   const [hasSave, setHasSave] = useState(() => !!loadSave("AutoSave"));
 
-  const initGame = useCallback(() => {
+  const initGame = useCallback(async () => {
     if (gameRef.current || !canvasRef.current) return;
 
     evidenceSystem.init();
     objectiveSystem.init();
 
+    const { Game } = await import("./game/Game");
     const game = new Game();
     game.init(canvasRef.current);
     game.setCallbacks({
@@ -202,8 +204,8 @@ export default function App() {
       gameRef.current = null;
     }
     // Reset for fresh play in vertical slice
-    setTimeout(() => {
-      initGame();
+    setTimeout(async () => {
+      await initGame();
       inputManager.requestPointerLock(canvasRef.current!);
     }, 0);
   };
@@ -233,11 +235,12 @@ export default function App() {
       gameRef.current.dispose();
       gameRef.current = null;
     }
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!canvasRef.current) return;
       evidenceSystem.init();
       objectiveSystem.init();
       restoreSaveData(data);
+      const { Game } = await import("./game/Game");
       const game = new Game();
       game.init(canvasRef.current);
       game.setCallbacks({
@@ -311,14 +314,24 @@ export default function App() {
           {loadingScene && <LoadingScreen sceneName={loadingScene} />}
           <ScreenEffects />
           <HUD sceneNote={sceneNote} />
-          <EvidenceBoard open={evidenceBoardOpen} onClose={() => { setEvidenceBoardOpen(false); gameState.evidenceBoardOpen = false; inputManager.requestPointerLock(canvasRef.current!); }} onViewEvidence={(id) => setViewingEvidence(id)} />
-          <DocumentViewer
-            evidence={viewingEvidence ? gameState.getEvidence(viewingEvidence) || null : null}
-            open={!!viewingEvidence}
-            onClose={() => setViewingEvidence(null)}
-          />
-          <TerminalUI open={terminalOpen} terminalId={activeTerminalId} onClose={() => { setTerminalOpen(false); gameState.terminalOpen = false; inputManager.requestPointerLock(canvasRef.current!); }} />
-          <MobileControls />
+          <Suspense fallback={null}>
+            <EvidenceBoard open={evidenceBoardOpen} onClose={() => { setEvidenceBoardOpen(false); gameState.evidenceBoardOpen = false; inputManager.requestPointerLock(canvasRef.current!); }} onViewEvidence={(id) => setViewingEvidence(id)} />
+          </Suspense>
+          <Suspense fallback={null}>
+            {!!viewingEvidence && (
+              <DocumentViewer
+                evidence={viewingEvidence ? gameState.getEvidence(viewingEvidence) || null : null}
+                open={!!viewingEvidence}
+                onClose={() => setViewingEvidence(null)}
+              />
+            )}
+          </Suspense>
+          <Suspense fallback={null}>
+            <TerminalUI open={terminalOpen} terminalId={activeTerminalId} onClose={() => { setTerminalOpen(false); gameState.terminalOpen = false; inputManager.requestPointerLock(canvasRef.current!); }} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <MobileControls />
+          </Suspense>
           <PauseMenu
             open={paused}
             onResume={resumeGame}
@@ -349,17 +362,23 @@ export default function App() {
             onSettings={() => setSettingsOpen(true)}
             onQuit={quitToMenu}
           />
-          {settingsOpen && <SettingsPanel open onClose={() => { setSettingsOpen(false); if (screen === "game" && !paused) inputManager.requestPointerLock(canvasRef.current!); }} />}
+          {settingsOpen && (
+            <Suspense fallback={null}>
+              <SettingsPanel open onClose={() => { setSettingsOpen(false); if (screen === "game" && !paused) inputManager.requestPointerLock(canvasRef.current!); }} />
+            </Suspense>
+          )}
         </>
       )}
 
       {screen === "ending" && ending && (
-        <EndingScreen
-          ending={ending}
-          score={endingScore}
-          onRestart={startGame}
-          onMenu={quitToMenu}
-        />
+        <Suspense fallback={null}>
+          <EndingScreen
+            ending={ending}
+            score={endingScore}
+            onRestart={startGame}
+            onMenu={quitToMenu}
+          />
+        </Suspense>
       )}
 
       {creditsOpen && (
@@ -389,7 +408,9 @@ export default function App() {
       )}
 
       {settingsOpen && screen === "menu" && (
-        <SettingsPanel open onClose={() => setSettingsOpen(false)} />
+        <Suspense fallback={null}>
+          <SettingsPanel open onClose={() => setSettingsOpen(false)} />
+        </Suspense>
       )}
     </div>
   );
