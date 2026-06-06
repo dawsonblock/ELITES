@@ -184,7 +184,7 @@ export class SceneBuilder {
     this.addProp(root, "BoatMast", [-3, 2.5, -15], [0.15, 3, 0.15], new pc.Color(0.1, 0.1, 0.11));
     this.addWall(root, "Wall_GateL", [-3, 2, -8], [2.2, 4, 0.3], new pc.Color(0.18, 0.18, 0.2));
     this.addWall(root, "Wall_GateR", [3, 2, -8], [2.2, 4, 0.3], new pc.Color(0.18, 0.18, 0.2));
-    this.addDoor(root, "Door_MainGate", [0, 2, -8], [4, 3.8, 0.25], new pc.Color(0.22, 0.22, 0.24), { doorId: "main_gate", locked: true });
+    this.addDoor(root, "Door_MainGate", [0, 2, -8], [4, 3.8, 0.25], new pc.Color(0.22, 0.22, 0.24), { doorId: "main_gate", locked: true, lockedMessage: "Gate locked. Find another way in." });
     this.addWall(root, "Wall_Left", [-8, 2, -6], [0.3, 4, 24], new pc.Color(0.12, 0.12, 0.14));
     this.addWall(root, "Wall_Right", [8, 2, -6], [0.3, 4, 24], new pc.Color(0.12, 0.12, 0.14));
     this.addWall(root, "Wall_Back", [0, 2, 6], [16, 4, 0.3], new pc.Color(0.12, 0.12, 0.14));
@@ -211,7 +211,7 @@ export class SceneBuilder {
     this.addWall(root, "DoorFrame_T", [0, 3.6, -14], [2.4, 0.4, 0.3], new pc.Color(0.22, 0.2, 0.18));
     this.addWall(root, "DoorFrame_L", [-1.1, 1.8, -14], [0.2, 3.6, 0.3], new pc.Color(0.22, 0.2, 0.18));
     this.addWall(root, "DoorFrame_R", [1.1, 1.8, -14], [0.2, 3.6, 0.3], new pc.Color(0.22, 0.2, 0.18));
-    this.addDoor(root, "Door_Maintenance", [0, 1.8, -14], [2, 3.5, 0.2], new pc.Color(0.28, 0.24, 0.2), { doorId: "maintenance_door", locked: true, needsKey: "staff_keycard_001" });
+    this.addDoor(root, "Door_Maintenance", [0, 1.8, -14], [2, 3.5, 0.2], new pc.Color(0.28, 0.24, 0.2), { doorId: "maintenance_door", locked: true, needsKey: "staff_keycard_001", lockedMessage: "Requires Staff Keycard" });
     this.addProp(root, "Shelf", [-3.5, 1.2, -6], [1.5, 0.08, 0.4], new pc.Color(0.2, 0.18, 0.15));
     const note = this.addProp(root, "Evidence_CameraNote", [-3.5, 1.35, -6], [0.3, 0.02, 0.3], new pc.Color(0.95, 0.95, 0.9));
     this.addInteractable(note, "evidence", "Camera Maintenance Note", { evidenceId: "camera_note_001" });
@@ -231,7 +231,7 @@ export class SceneBuilder {
     this.addWall(root, "DoorFrame_T2", [0, 3.6, 3], [2.4, 0.4, 0.3], new pc.Color(0.26, 0.24, 0.21));
     this.addWall(root, "DoorFrame_L2", [-1.1, 1.8, 3], [0.2, 3.6, 0.3], new pc.Color(0.26, 0.24, 0.21));
     this.addWall(root, "DoorFrame_R2", [1.1, 1.8, 3], [0.2, 3.6, 0.3], new pc.Color(0.26, 0.24, 0.21));
-    this.addDoor(root, "Door_Security", [0, 1.8, 3], [2, 3.5, 0.2], new pc.Color(0.3, 0.26, 0.22), { doorId: "security_door", locked: true, needsKey: "staff_keycard_001" });
+    this.addDoor(root, "Door_Security", [0, 1.8, 3], [2, 3.5, 0.2], new pc.Color(0.3, 0.26, 0.22), { doorId: "security_door", locked: true, needsKey: "staff_keycard_001", lockedMessage: "Requires Staff Keycard" });
     this.addProp(root, "DeskTop", [0, 0.8, -4], [3.2, 0.1, 1.6], new pc.Color(0.32, 0.22, 0.16));
     this.addProp(root, "DeskLeg_LF", [-1.4, 0.4, -4.6], [0.1, 0.8, 0.1], new pc.Color(0.28, 0.2, 0.14));
     this.addProp(root, "DeskLeg_RF", [1.4, 0.4, -4.6], [0.1, 0.8, 0.1], new pc.Color(0.28, 0.2, 0.14));
@@ -274,7 +274,7 @@ export class SceneBuilder {
     this.addWall(root, "BunkerFrame_T", [0, 3.6, 7], [2.8, 0.4, 0.3], new pc.Color(0.28, 0.28, 0.32));
     this.addWall(root, "BunkerFrame_L", [-1.3, 1.8, 7], [0.2, 3.6, 0.3], new pc.Color(0.28, 0.28, 0.32));
     this.addWall(root, "BunkerFrame_R", [1.3, 1.8, 7], [0.2, 3.6, 0.3], new pc.Color(0.28, 0.28, 0.32));
-    this.addDoor(root, "Door_Bunker", [0, 1.8, 7], [2.4, 3.5, 0.25], new pc.Color(0.32, 0.32, 0.36), { doorId: "bunker_door", locked: true, needsCode: "7391" });
+    this.addDoor(root, "Door_Bunker", [0, 1.8, 7], [2.4, 3.5, 0.25], new pc.Color(0.32, 0.32, 0.36), { doorId: "bunker_door", locked: true, needsCode: "7391", lockedMessage: "Requires Bunker Access Code" });
     this.addLight(root, "MonitorGlow", "point", [0, 2.5, -6], [0.2, 0.5, 0.7], 0.6, 10);
     this.addLight(root, "CeilingPanel1", "point", [-4, 3.8, 0], [0.65, 0.65, 0.7], 0.35, 8);
     this.addLight(root, "CeilingPanel2", "point", [4, 3.8, 0], [0.65, 0.65, 0.7], 0.35, 8);

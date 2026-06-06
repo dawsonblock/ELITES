@@ -27,4 +27,5 @@ export const GameEvents = {
   SETTINGS_CHANGED: "settings:changed",
   INTERACT_TARGET: "interact:target",
   INTERACT_TRIGGER: "interact:trigger",
+  SYSTEM_MESSAGE: "ui:system_message",
 } as const;

@@ -183,6 +183,7 @@ export default function App() {
         const needsKey = d.meta.needsKey as string | undefined;
         const needsCode = d.meta.needsCode as string | undefined;
         const locked = d.meta.locked as boolean;
+        const lockedMessage = d.meta.lockedMessage as string | undefined;
         if (gameState.isDoorUnlocked(doorId) || !locked) {
           gameState.unlockDoor(doorId);
           eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
@@ -194,7 +195,11 @@ export default function App() {
           if (gameState.hasEvidence("access_log_001")) {
             gameState.unlockDoor(doorId);
             eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
+          } else {
+            eventBus.emit(GameEvents.SYSTEM_MESSAGE, lockedMessage ?? "Requires Bunker Access Code");
           }
+        } else {
+          eventBus.emit(GameEvents.SYSTEM_MESSAGE, lockedMessage ?? "Locked");
         }
       } else if (d.type === "terminal" && d.meta?.terminalId) {
         const tid = d.meta.terminalId as string;

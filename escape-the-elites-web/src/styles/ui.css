@@ -627,6 +627,31 @@
   margin-top: 4px;
 }
 
+.system-message {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(5,5,8,0.88);
+  border: 1px solid rgba(239,68,68,0.35);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  color: #e8e8ec;
+  letter-spacing: 0.04em;
+  animation: slideInFade 3.5s ease forwards;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+@keyframes slideInFade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  10%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(0); }
+}
+
 /* ─── Evidence Board ────────────────────────────────────────────────── */
 .evidence-board-overlay {
   position: absolute;

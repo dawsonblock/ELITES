@@ -15,6 +15,7 @@ export const HUD: React.FC<Props> = ({ sceneNote }) => {
   const [interact, setInteract] = useState<{ type: string; label: string } | null>(null);
   const [notification, setNotification] = useState<{ title: string; corroborates?: string } | null>(null);
   const [localSceneNote, setLocalSceneNote] = useState<string | null>(null);
+  const [systemMessage, setSystemMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const onObj = () => setObjective(gameState.allObjectives().find((o) => o.status === "active"));
@@ -42,17 +43,24 @@ export const HUD: React.FC<Props> = ({ sceneNote }) => {
       }
     };
 
+    const onSysMsg = (msg: unknown) => {
+      setSystemMessage(msg as string);
+      setTimeout(() => setSystemMessage(null), 3500);
+    };
+
     const unsubObj = eventBus.on(GameEvents.OBJECTIVE_UPDATED, onObj);
     const unsubDet = eventBus.on(GameEvents.DETECTION_CHANGED, onDetection);
     const unsubInt = eventBus.on(GameEvents.INTERACT_TARGET, onInteract);
     const unsubEv = eventBus.on(GameEvents.INTERACT_TRIGGER, onEvidence);
     const unsubEvCol = eventBus.on(GameEvents.EVIDENCE_COLLECTED, onEvidenceCollected);
+    const unsubSys = eventBus.on(GameEvents.SYSTEM_MESSAGE, onSysMsg);
     return () => {
       unsubObj();
       unsubDet();
       unsubInt();
       unsubEv();
       unsubEvCol();
+      unsubSys();
     };
   }, []);
 
@@ -114,6 +122,12 @@ export const HUD: React.FC<Props> = ({ sceneNote }) => {
       {localSceneNote && (
         <div className="scene-note">
           {localSceneNote}
+        </div>
+      )}
+
+      {systemMessage && (
+        <div className="system-message">
+          {systemMessage}
         </div>
       )}
     </div>

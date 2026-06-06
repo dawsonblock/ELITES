@@ -145,6 +145,15 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
     return true;
   };
 
+  const missingRequirements = (cmd: TerminalCommand): string => {
+    const req = cmd.requiresEvidence || [];
+    const missing = req.filter((id) => !gameState.hasEvidence(id));
+    if (missing.length === 0) return "";
+    return missing
+      .map((id) => `Missing: ${gameState.getEvidence(id)?.title || id}`)
+      .join(" | ");
+  };
+
   const runCommand = (cmd: TerminalCommand) => {
     if (!canRunCommand(cmd)) {
       audioSystem.playTone(200, 0.2, "square", "ui", 0.1);
@@ -288,7 +297,7 @@ export const TerminalUI: React.FC<Props> = ({ open, terminalId, onClose }) => {
                 onClick={() => canRun && runCommand(cmd)}
                 disabled={downloading || !canRun}
                 onMouseEnter={() => setActiveCmd(i)}
-                title={!canRun ? "Missing required credentials" : undefined}
+                title={!canRun ? missingRequirements(cmd) : undefined}
               >
                 {cmd.label}
               </button>
