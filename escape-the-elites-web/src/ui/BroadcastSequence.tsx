@@ -119,6 +119,7 @@ export const BroadcastSequence: React.FC<Props> = ({ open, onComplete }) => {
             <span className="broadcast-upload-pct">{Math.round(uploadProgress)}%</span>
           </div>
           <div className="broadcast-progress-track">
+            {/* CSS variable injection — width driven by .broadcast-progress-fill in ui.css */}
             <div
               className="broadcast-progress-fill"
               style={{ "--broadcast-progress": `${uploadProgress}%` } as React.CSSProperties}
