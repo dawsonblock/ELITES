@@ -20,6 +20,7 @@ export class SceneBuilder {
     basePos: pc.Vec3;
   }[] = [];
   interactables: pc.Entity[] = [];
+  hidingZones: pc.Entity[] = [];
 
   constructor(app: pc.Application) {
     this.app = app;
@@ -64,6 +65,15 @@ export class SceneBuilder {
     (box.render as any).material = this.createMaterial(color);
     root.addChild(box);
     return box;
+  }
+
+  addHidingZone(root: pc.Entity, name: string, pos: [number, number, number], scale: [number, number, number]) {
+    const zone = new pc.Entity(name + "_HidingZone");
+    zone.setPosition(...pos);
+    zone.setLocalScale(...scale);
+    root.addChild(zone);
+    this.hidingZones.push(zone);
+    return zone;
   }
 
   addInteractable(entity: pc.Entity, type: string, label: string, meta?: Record<string, unknown>) {
@@ -242,9 +252,10 @@ export class SceneBuilder {
     this.addProp(root, "BreakerDoor", [-4.68, 1.8, -9.9], [0.04, 0.9, 0.55], new pc.Color(0.22, 0.22, 0.24));
     const breakerNote = this.addProp(root, "BreakerNote", [-4.65, 2.4, -10], [0.2, 0.02, 0.15], new pc.Color(0.9, 0.85, 0.6));
     this.addInteractable(breakerNote, "note", "Breaker Panel Note", { note: "CAM-1 circuit: BREAKER 3\nCAM-3 circuit: BREAKER 7 (deferred)\n\nDo not cut main without supervisor approval." });
-    // Hiding alcove — recessed area in left wall
+    // Hiding alcove — recessed area in left wall with trigger zone
     this.addProp(root, "Alcove_Back", [-5, 1.9, -9], [0.8, 3.8, 1.6], new pc.Color(0.12, 0.12, 0.13));
     this.addProp(root, "Alcove_Cover", [-4.7, 1.9, -9], [0.2, 3.8, 1.6], new pc.Color(0.14, 0.14, 0.16));
+    this.addHidingZone(root, "Alcove", [-4.5, 1.9, -9], [1.2, 3.8, 1.8]);
     // Toolbox and evidence
     this.addProp(root, "Toolbox", [2.5, 0.3, -3], [0.6, 0.6, 0.4], new pc.Color(0.18, 0.16, 0.14));
     const card = this.addProp(root, "Evidence_Keycard", [2.5, 0.7, -3], [0.22, 0.02, 0.14], new pc.Color(0.9, 0.7, 0.2));

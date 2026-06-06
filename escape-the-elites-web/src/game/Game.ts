@@ -12,7 +12,7 @@ import { progressionSystem } from "./ProgressionSystem";
 import { PlayerController } from "./controllers/PlayerController";
 import { InteractionSystem } from "./interactions/InteractionSystem";
 import { DoorSystem } from "./world/DoorSystem";
-import { StealthSystem } from "./stealth/StealthSystem";
+import { StealthSystem, PatrolEnemy } from "./stealth/StealthSystem";
 
 export type GameCallbacks = {
   onReady?: () => void;
@@ -34,6 +34,7 @@ export class Game {
   private doorSystem: DoorSystem | null = null;
   private interactionSystem = new InteractionSystem();
   private stealthSystem = new StealthSystem();
+  private patrolEnemies: PatrolEnemy[] = [];
   private resizeHandler: (() => void) | null = null;
 
   constructor() {}
@@ -91,9 +92,30 @@ export class Game {
     this.doorSystem = new DoorSystem(this.walls);
     this.doorSystem.setDoors(builder.doors, this.walls);
 
+    // Destroy previous patrol enemies before loading new scene
+    for (const enemy of this.patrolEnemies) enemy.destroy();
+    this.patrolEnemies = [];
+
     this.playerController?.resetPosition(sceneId);
     this.interactionSystem.interactables = this.interactables;
     this.stealthSystem.setEntities(this.sceneRoot, this.playerController?.playerEntity ?? null);
+
+    // Register hiding zones from builder
+    for (const zone of builder.hidingZones) {
+      this.stealthSystem.registerHidingZone(zone);
+    }
+
+    // Spawn patrol enemies for specific scenes
+    if (sceneId === "security_wing" && this.app) {
+      const patrol = new PatrolEnemy(this.app, "Guard_SecurityWing", [
+        [0, 0.85, 0],
+        [4, 0.85, -4],
+        [0, 0.85, -6],
+        [-4, 0.85, -4],
+      ]);
+      this.patrolEnemies.push(patrol);
+      this.stealthSystem.registerPatrolEnemy(patrol);
+    }
 
     const ambientMap: Record<string, Parameters<typeof audioSystem.startAmbient>[0]> = {
       dock: "storm",
@@ -211,6 +233,8 @@ export class Game {
   }
 
   dispose() {
+    for (const enemy of this.patrolEnemies) enemy.destroy();
+    this.patrolEnemies = [];
     this.interactionSystem.dispose();
     this.stealthSystem.dispose();
     this.doorSystem?.dispose();
