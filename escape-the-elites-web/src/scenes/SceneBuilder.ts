@@ -216,6 +216,21 @@ export class SceneBuilder {
     this.addProp(root, "Crate_B", [4, 0.35, -4.5], [0.7, 0.7, 0.7], new pc.Color(0.14, 0.13, 0.11));
     this.addProp(root, "Crate_C", [-4, 0.35, -3], [0.8, 0.5, 0.8], new pc.Color(0.15, 0.13, 0.11));
     this.addProp(root, "StorageBox", [-4, 0.6, -5], [1.2, 0.5, 0.6], new pc.Color(0.18, 0.16, 0.14));
+    // Second crate cluster — left side of dock
+    this.addProp(root, "Crate_D", [-3.5, 0.35, -2], [0.9, 0.7, 0.7], new pc.Color(0.16, 0.14, 0.11));
+    this.addProp(root, "Crate_E", [-3.5, 1.1, -2], [0.7, 0.7, 0.7], new pc.Color(0.14, 0.12, 0.1));
+    this.addProp(root, "StorageBarrel_L", [-4.5, 0.45, -1.5], [0.45, 0.9, 0.45], new pc.Color(0.2, 0.18, 0.16));
+    this.addProp(root, "StorageBarrel_R", [-4, 0.45, -1], [0.45, 0.9, 0.45], new pc.Color(0.18, 0.16, 0.14));
+    // Clipboard/lore note on top of Crate_D
+    const dockNote = this.addProp(root, "DockWorkNote", [-3.5, 0.76, -1.8], [0.25, 0.02, 0.18], new pc.Color(0.92, 0.88, 0.75));
+    this.addInteractable(dockNote, "note", "Dock Work Log", { note: "Night shift — 2 of 6 containers cleared.\nShipment 7-G held for customs review.\nDo NOT enter the inner compound without a pass.\nHarrow estate guests arrive by water taxi only." });
+    // Dock security camera — right side wall
+    this.addProp(root, "CamMount_Dock", [7.5, 3.2, -4], [0.35, 0.35, 0.35], new pc.Color(0.15, 0.15, 0.16));
+    const dockCam = this.addProp(root, "Camera_Dock_01", [7.5, 3.0, -4], [0.28, 0.22, 0.45], new pc.Color(0.25, 0.05, 0.05), new pc.Color(0.6, 0, 0));
+    setCameraMeta(dockCam, { id: "cam_dock_01", sweepAngle: 60, sweepSpeed: 0.38 });
+    this.addCameraCone(dockCam, 60, 12);
+    // Dim red warning light near dock camera
+    this.addLight(root, "SecurityRedLight", "point", [7.5, 3.6, -4], [0.8, 0.05, 0.05], 0.2, 5);
     // Evidence — map on crate surface
     const map = this.addProp(root, "Evidence_ServiceMap", [3, 0.75, -4], [0.35, 0.02, 0.45], new pc.Color(0.9, 0.85, 0.6), new pc.Color(0.05, 0.04, 0.02));
     this.addInteractable(map, "evidence", "Maintenance Route Map", { evidenceId: "service_map_001" });
@@ -256,6 +271,16 @@ export class SceneBuilder {
     this.addProp(root, "Alcove_Back", [-5, 1.9, -9], [0.8, 3.8, 1.6], new pc.Color(0.12, 0.12, 0.13));
     this.addProp(root, "Alcove_Cover", [-4.7, 1.9, -9], [0.2, 3.8, 1.6], new pc.Color(0.14, 0.14, 0.16));
     this.addHidingZone(root, "Alcove", [-4.5, 1.9, -9], [1.2, 3.8, 1.8]);
+    // Second security camera — RIGHT wall (opposite side from existing left-wall cam)
+    this.addProp(root, "CamMount_SE2", [4.8, 3.6, -15], [0.4, 0.4, 0.4], new pc.Color(0.15, 0.15, 0.16));
+    const camSE2 = this.addProp(root, "Camera_SE_02", [4.6, 3.4, -15], [0.3, 0.25, 0.5], new pc.Color(0.25, 0.05, 0.05), new pc.Color(0.6, 0, 0));
+    setCameraMeta(camSE2, { id: "cam_service_02", sweepAngle: 45, sweepSpeed: 0.6 });
+    this.addCameraCone(camSE2, 45, 12);
+    // Warning stripe painted on floor under second camera
+    this.addProp(root, "WarningStripe", [4.5, 0.01, -15], [1.0, 0.02, 2.5], new pc.Color(0.55, 0.42, 0.05));
+    // Guard patrol path indicator sign on the wall
+    const patrolSign = this.addProp(root, "PatrolSign", [4.7, 2.0, -11], [0.04, 0.4, 0.7], new pc.Color(0.6, 0.55, 0.12), new pc.Color(0.15, 0.12, 0.01));
+    this.addInteractable(patrolSign, "note", "Patrol Schedule", { note: "PATROL SCHEDULE — INTERNAL\nRoute B: Service corridor, 15-minute sweep.\nCAM-1 covers entry. CAM-2 covers exit.\nGuard shift change: 22:00 / 06:00." });
     // Toolbox and evidence
     this.addProp(root, "Toolbox", [2.5, 0.3, -3], [0.6, 0.6, 0.4], new pc.Color(0.18, 0.16, 0.14));
     const card = this.addProp(root, "Evidence_Keycard", [2.5, 0.7, -3], [0.22, 0.02, 0.14], new pc.Color(0.9, 0.7, 0.2));
@@ -333,6 +358,19 @@ export class SceneBuilder {
     this.addLight(root, "Chandelier", "point", [0, 3.5, -4], [0.95, 0.78, 0.55], 0.75, 12);
     this.addLight(root, "DeskLamp", "point", [-1, 0.95, -4], [0.9, 0.75, 0.5], 0.4, 4);
     this.addLight(root, "MonitorGlow", "point", [3.5, 2.2, -8], [0, 0.25, 0.6], 0.15, 4);
+    // Armchair in the corner
+    this.addProp(root, "Chair_Back", [5.5, 1.1, -4], [1.2, 1.0, 0.25], new pc.Color(0.38, 0.22, 0.14));
+    this.addProp(root, "Chair_Seat", [5.5, 0.55, -4.35], [1.2, 0.2, 0.9], new pc.Color(0.38, 0.22, 0.14));
+    this.addProp(root, "Chair_ArmL", [4.95, 0.85, -4.35], [0.12, 0.3, 0.9], new pc.Color(0.35, 0.2, 0.12));
+    this.addProp(root, "Chair_ArmR", [6.05, 0.85, -4.35], [0.12, 0.3, 0.9], new pc.Color(0.35, 0.2, 0.12));
+    // Rug under the desk
+    this.addProp(root, "Rug", [0, 0.0, -4], [5, 0.02, 3.5], new pc.Color(0.28, 0.14, 0.12));
+    // Window light shaft — simulated with a thin bright plane
+    this.addProp(root, "WindowShaft", [6.9, 2, -6], [0.05, 3, 1.8], new pc.Color(0.72, 0.68, 0.52), new pc.Color(0.18, 0.16, 0.1));
+    this.addLight(root, "WindowLight", "spot", [6.5, 3.8, -6], [0.7, 0.65, 0.5], 0.3, 8, 25);
+    // Framed picture on the back wall
+    this.addProp(root, "PictureFrame", [3, 2.8, -8.88], [1.4, 1.0, 0.06], new pc.Color(0.22, 0.18, 0.14));
+    this.addProp(root, "PictureCanvas", [3, 2.8, -8.84], [1.2, 0.8, 0.04], new pc.Color(0.08, 0.12, 0.22), new pc.Color(0.02, 0.03, 0.06));
     this.addTrigger(root, [0, 1.7, 7], [4, 3, 1], "security_wing", "Security Wing");
   }
 

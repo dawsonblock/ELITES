@@ -6,8 +6,8 @@ import { gameState } from "../../game/GameState";
 import { inputManager } from "../../game/InputManager";
 import { eventBus } from "../../utils/eventBus";
 import { GameEvents } from "../../game/GameEvents";
-import { evidenceSystem } from "../../systems/EvidenceSystem";
 import { objectiveSystem } from "../../systems/ObjectiveSystem";
+import { dispatchGameCommand } from "../../utils/commandBus";
 import type { AppScreen } from "../AppScreen";
 
 type UseGameEventsDeps = {
@@ -47,7 +47,7 @@ export function useGameEvents(deps: UseGameEventsDeps): void {
       if (e.code === "Escape") {
         if (terminalOpen) {
           setTerminalOpen(false);
-          gameState.terminalOpen = false;
+          dispatchGameCommand({ type: "CLOSE_TERMINAL" });
           inputManager.requestPointerLock(canvasRef.current!);
           return;
         }
@@ -97,13 +97,10 @@ export function useGameEvents(deps: UseGameEventsDeps): void {
     const onInteract = (data: unknown) => {
       const d = data as { type: string; label: string; meta?: Record<string, unknown>; entity?: pc.Entity };
       if (d.type === "evidence" && d.meta?.evidenceId) {
-        const collected = evidenceSystem.collect(d.meta.evidenceId as string);
-        if (collected) {
-          objectiveSystem.checkEvidenceGates();
-          if (d.entity) {
-            gameRef.current?.removeInteractable(d.entity);
-          }
-        }
+        dispatchGameCommand(
+          { type: "COLLECT_EVIDENCE", evidenceId: d.meta.evidenceId as string, entity: d.entity },
+          gameRef
+        );
       } else if (d.type === "door" && d.meta?.doorId) {
         const doorId = d.meta.doorId as string;
         const needsKey = d.meta.needsKey as string | undefined;
@@ -111,30 +108,27 @@ export function useGameEvents(deps: UseGameEventsDeps): void {
         const locked = d.meta.locked as boolean;
         const lockedMessage = d.meta.lockedMessage as string | undefined;
         if (gameState.isDoorUnlocked(doorId) || !locked) {
-          gameState.unlockDoor(doorId);
-          eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
+          dispatchGameCommand({ type: "UNLOCK_DOOR", doorId });
         } else if (needsKey && gameState.hasEvidence(needsKey)) {
-          gameState.unlockDoor(doorId);
-          eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
+          dispatchGameCommand({ type: "UNLOCK_DOOR", doorId });
         } else if (needsCode) {
           // For simplicity in vertical slice, auto-unlock if player has access log
           if (gameState.hasEvidence("access_log_001")) {
-            gameState.unlockDoor(doorId);
-            eventBus.emit(GameEvents.DOOR_UNLOCKED, doorId);
+            dispatchGameCommand({ type: "UNLOCK_DOOR", doorId });
           } else {
-            eventBus.emit(GameEvents.SYSTEM_MESSAGE, lockedMessage ?? "Requires Bunker Access Code");
+            dispatchGameCommand({ type: "SYSTEM_MESSAGE", message: lockedMessage ?? "Requires Bunker Access Code" });
           }
         } else {
-          eventBus.emit(GameEvents.SYSTEM_MESSAGE, lockedMessage ?? "Locked");
+          dispatchGameCommand({ type: "SYSTEM_MESSAGE", message: lockedMessage ?? "Locked" });
         }
       } else if (d.type === "terminal" && d.meta?.terminalId) {
         const tid = d.meta.terminalId as string;
         setActiveTerminalId(tid);
         setTerminalOpen(true);
-        gameState.terminalOpen = true;
+        dispatchGameCommand({ type: "OPEN_TERMINAL", terminalId: tid });
         inputManager.exitPointerLock();
       } else if (d.type === "note" && d.meta?.note) {
-        eventBus.emit(GameEvents.SYSTEM_MESSAGE, d.meta.note as string);
+        dispatchGameCommand({ type: "SYSTEM_MESSAGE", message: d.meta.note as string });
       }
     };
 

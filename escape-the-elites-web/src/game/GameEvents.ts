@@ -28,4 +28,5 @@ export const GameEvents = {
   INTERACT_TARGET: "interact:target",
   INTERACT_TRIGGER: "interact:trigger",
   SYSTEM_MESSAGE: "ui:system_message",
+  NOISE_EMITTED: "stealth:noise_emitted",
 } as const;

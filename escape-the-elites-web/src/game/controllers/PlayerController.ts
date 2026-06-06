@@ -88,6 +88,13 @@ export class PlayerController {
       if (this.moveTime > 0 && Math.floor(this.moveTime / stepRate) !== Math.floor((this.moveTime - dt) / stepRate)) {
         audioSystem.playFootstep("concrete");
       }
+      // Emit noise event for stealth detection
+      // surface multipliers: concrete=1.0 (default), metal=1.6, carpet=0.5
+      const stanceMult = inputManager.isActive("sprint") ? 2.5
+        : inputManager.isActive("crouch") ? 0.25
+        : 1.0;
+      const noiseStrength = stanceMult; // surfaceMult=1.0 until surface detection added
+      audioSystem.emitNoise({ x: pos.x, y: pos.y, z: pos.z }, 6 * stanceMult, noiseStrength);
     } else {
       this.moveTime = 0;
     }

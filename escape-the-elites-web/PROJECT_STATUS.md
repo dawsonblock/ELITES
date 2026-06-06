@@ -1,6 +1,6 @@
 # Escape the Elites — Project Status
 
-Status: **Alpha 0.6** — Playable vertical slice; scripts, refactor, and test coverage improvements.
+Status: **Alpha 0.7** — First route quality pass: gameplay, stealth, noise, guard FSM, command bus, JSON level schema pilot.
 
 ## Verified (Alpha 0.5)
 - Clean source package (verify:release-package passes)
@@ -31,15 +31,52 @@ Status: **Alpha 0.6** — Playable vertical slice; scripts, refactor, and test c
 - Remaining acceptable dynamic inline values: detection width, alert tint, progress CSS variables, grid-area layout in MobileControls, importance border color in EvidenceBoard
 - CSS class names follow BEM-style conventions throughout
 
-### Gameplay
-- Blocked door messages: player sees contextual reason when interaction is denied
-- Terminal command buttons show exact missing evidence in tooltip when disabled
-- Dock scene: fence line, mansion silhouette, security notice sign, boat wreckage
-- Service entrance: pipes, breaker box with readable note, hiding alcove with detection zone
-- Mansion office: bookshelf, file boxes, security monitor, monitor glow
-- Camera cones change colour based on player proximity (safe / suspicious / detecting)
-- Hiding zones: standing in the service entrance alcove reduces detection gain by 95%
-- Patrol enemy in Security Wing: waypoint patrol, vision cone, hearing radius
+### Gameplay — Alpha 0.7 First Route Quality Pass
+
+**Dock scene additions:**
+- Second crate cluster (Crate_D/E stacked, two barrels) on left side of dock
+- Dock work log note on clipboard (interactable, reveals estate context)
+- Security camera on right wall with sweep cone and red warning light
+
+**Service entrance additions:**
+- Second camera (cam_service_02) on right wall covering the far corridor end
+- Warning stripe painted on floor under second camera (visual readability cue)
+- Patrol schedule note on wall (reveals route and guard timing)
+
+**Mansion office additions:**
+- Armchair in corner (4-part: back, seat, two arms)
+- Rug under desk
+- Window light shaft with spot light for atmosphere
+- Framed picture on back wall
+
+**Stealth — guard FSM:**
+- `PatrolEnemy` now runs a full 4-state FSM: `patrol → investigate → alert → returnToPatrol`
+- Detection-value-driven transitions with per-state timers
+- Suspicion barks emitted as `SYSTEM_MESSAGE` events on every transition
+- Alert state triggers lockdown idempotently
+- `playGuardAlert(state)` audio cues: suspicious (two rising tones), investigate (three ticks), alert (five descending pulses)
+
+**Noise system:**
+- `audioSystem.emitNoise(position, radius, strength)` added
+- `PlayerController` emits noise every frame when moving; stance multipliers: sprint=2.5, walk=1.0, crouch=0.25
+- `NOISE_EMITTED` event added to `GameEvents`
+
+**Command bus:**
+- `src/utils/commandBus.ts` — `dispatchGameCommand()` with typed union
+- All interact-triggered state mutations in `useGameEvents.ts` routed through command bus
+- Commands: COLLECT_EVIDENCE, COMPLETE_OBJECTIVE, UNLOCK_DOOR, SET_LOCKDOWN, SET_ALERT, START_BROADCAST, COMPLETE_BROADCAST, SAVE_GAME, LOAD_GAME, OPEN_TERMINAL, CLOSE_TERMINAL, SYSTEM_MESSAGE
+- DEV mode logs every dispatched command to console
+
+**JSON level schema (pilot):**
+- `src/types/levelSchema.ts` — typed schema covering all entity types the first route uses
+- `src/data/levels/service_entrance.json` — pilot level definition (mirrors current procedural build)
+- Schema supports: floor, wall, ceiling, prop, evidence, note, terminal, door, camera, hiding_zone, light, trigger
+- Procedural SceneBuilder methods remain authoritative; JSON is the schema reference
+
+**Existing gameplay (carried from Alpha 0.5/0.6):**
+- Blocked door messages, terminal command tooltips
+- Camera cones change colour by proximity, hiding zone reduces detection by 95%
+- Patrol enemy in Security Wing (now with full FSM)
 
 ### Broadcast / Ending
 - Broadcast triggers evidence checklist UI before upload
@@ -63,7 +100,9 @@ See `SECURITY_NOTES.md` for full npm audit status and accepted risk assessment.
 
 ## Not Yet In This Release
 - Real GLB assets (game uses PlayCanvas procedural geometry — intentional for this slice)
-- Audio assets beyond placeholder paths
-- Additional e2e test coverage for stealth and broadcast sequence
+- Audio assets beyond procedural Web Audio (no .mp3/.ogg authored files yet)
+- Surface-specific noise multipliers (concrete=1.0 default until surface detection added)
+- SceneBuilder reading from JSON level files (schema exists, loader integration pending)
 - Performance profiling / bundle size budget
 - Mobile layout polish
+- Additional production e2e tests for stealth and broadcast smoke paths

@@ -1,0 +1,116 @@
+{
+  "id": "service_entrance",
+  "name": "Service Entrance",
+  "ambient": "indoor",
+  "fog": {
+    "color": [0.03, 0.03, 0.04],
+    "density": 0.02
+  },
+  "spawn": {
+    "position": [0, 0.85, 8],
+    "yaw": 180
+  },
+  "entities": [
+    { "type": "floor",   "id": "Floor",       "position": [0, -0.1, 0],   "scale": [10, 0.2, 30], "color": [0.12, 0.12, 0.13] },
+    { "type": "ceiling", "id": "Ceiling",      "position": [0, 3.8, 0],    "scale": [10, 0.2, 30], "color": [0.09, 0.09, 0.10] },
+    { "type": "wall",    "id": "Wall_L",       "position": [-5, 1.9, 0],   "scale": [0.3, 3.8, 30], "color": [0.20, 0.20, 0.22] },
+    { "type": "wall",    "id": "Wall_R",       "position": [5, 1.9, 0],    "scale": [0.3, 3.8, 30], "color": [0.20, 0.20, 0.22] },
+    { "type": "wall",    "id": "Wall_Back_SE", "position": [0, 1.9, 9],    "scale": [10, 3.8, 0.3], "color": [0.20, 0.20, 0.22] },
+
+    { "type": "prop",    "id": "Pipe_L1",      "position": [-4.8, 2.5, 0], "scale": [0.10, 0.10, 20], "color": [0.18, 0.18, 0.20] },
+    { "type": "prop",    "id": "Pipe_L2",      "position": [-4.6, 3.0, 0], "scale": [0.08, 0.08, 20], "color": [0.16, 0.16, 0.18] },
+    { "type": "prop",    "id": "DuctR",        "position": [4.5, 3.4, 0],  "scale": [0.60, 0.35, 28], "color": [0.14, 0.14, 0.16] },
+
+    {
+      "type": "camera",
+      "id": "Camera_01",
+      "cameraId": "cam_service_01",
+      "mountPosition": [0, 3.6, -5],
+      "bodyPosition":  [0, 3.4, -5],
+      "sweepAngle": 55,
+      "sweepSpeed": 0.5,
+      "coneRange": 14
+    },
+    {
+      "type": "camera",
+      "id": "Camera_SE_02",
+      "cameraId": "cam_service_02",
+      "mountPosition": [4.8, 3.6, -15],
+      "bodyPosition":  [4.6, 3.4, -15],
+      "sweepAngle": 45,
+      "sweepSpeed": 0.6,
+      "coneRange": 12
+    },
+
+    { "type": "prop", "id": "BreakerBox",  "position": [-4.7, 1.8, -10], "scale": [0.15, 1.0, 0.60], "color": [0.30, 0.30, 0.32] },
+    { "type": "prop", "id": "BreakerDoor", "position": [-4.68, 1.8, -9.9], "scale": [0.04, 0.9, 0.55], "color": [0.22, 0.22, 0.24] },
+    {
+      "type": "note",
+      "id": "BreakerNote",
+      "position": [-4.65, 2.4, -10],
+      "scale": [0.20, 0.02, 0.15],
+      "color": [0.90, 0.85, 0.60],
+      "label": "Breaker Panel Note",
+      "text": "CAM-1 circuit: BREAKER 3\nCAM-3 circuit: BREAKER 7 (deferred)\n\nDo not cut main without supervisor approval."
+    },
+
+    { "type": "prop", "id": "Alcove_Back",  "position": [-5, 1.9, -9],   "scale": [0.8, 3.8, 1.6], "color": [0.12, 0.12, 0.13] },
+    { "type": "prop", "id": "Alcove_Cover", "position": [-4.7, 1.9, -9], "scale": [0.2, 3.8, 1.6], "color": [0.14, 0.14, 0.16] },
+    { "type": "hiding_zone", "id": "Alcove", "position": [-4.5, 1.9, -9], "scale": [1.2, 3.8, 1.8] },
+
+    { "type": "prop", "id": "WarningStripe", "position": [4.5, 0.01, -15], "scale": [1.0, 0.02, 2.5], "color": [0.55, 0.42, 0.05] },
+    {
+      "type": "note",
+      "id": "PatrolSign",
+      "position": [4.7, 2.0, -11],
+      "scale": [0.04, 0.40, 0.70],
+      "color": [0.60, 0.55, 0.12],
+      "label": "Patrol Schedule",
+      "text": "PATROL SCHEDULE — INTERNAL\nRoute B: Service corridor, 15-minute sweep.\nCAM-1 covers entry. CAM-2 covers exit.\nGuard shift change: 22:00 / 06:00."
+    },
+
+    { "type": "prop", "id": "Toolbox",      "position": [2.5, 0.3, -3],  "scale": [0.60, 0.60, 0.40], "color": [0.18, 0.16, 0.14] },
+    {
+      "type": "evidence",
+      "id": "Evidence_Keycard",
+      "position": [2.5, 0.7, -3],
+      "scale": [0.22, 0.02, 0.14],
+      "color": [0.90, 0.70, 0.20],
+      "evidenceId": "staff_keycard_001",
+      "label": "Staff Keycard"
+    },
+    { "type": "prop", "id": "Shelf",       "position": [-3.5, 1.2, -6],  "scale": [1.50, 0.08, 0.40], "color": [0.20, 0.18, 0.15] },
+    { "type": "prop", "id": "Shelf_Lower", "position": [-3.5, 0.5, -6],  "scale": [1.50, 0.08, 0.40], "color": [0.20, 0.18, 0.15] },
+    {
+      "type": "evidence",
+      "id": "Evidence_CameraNote",
+      "position": [-3.5, 1.35, -6],
+      "scale": [0.30, 0.02, 0.30],
+      "color": [0.95, 0.95, 0.90],
+      "evidenceId": "camera_note_001",
+      "label": "Camera Maintenance Note"
+    },
+
+    { "type": "wall", "id": "DoorFrame_T",  "position": [0, 3.6, -14],  "scale": [2.4, 0.4, 0.3], "color": [0.22, 0.20, 0.18] },
+    { "type": "wall", "id": "DoorFrame_L",  "position": [-1.1, 1.8, -14], "scale": [0.2, 3.6, 0.3], "color": [0.22, 0.20, 0.18] },
+    { "type": "wall", "id": "DoorFrame_R",  "position": [1.1, 1.8, -14], "scale": [0.2, 3.6, 0.3], "color": [0.22, 0.20, 0.18] },
+    {
+      "type": "door",
+      "id": "Door_Maintenance",
+      "position": [0, 1.8, -14],
+      "scale": [2.0, 3.5, 0.2],
+      "color": [0.28, 0.24, 0.20],
+      "doorId": "maintenance_door",
+      "locked": true,
+      "needsKey": "staff_keycard_001",
+      "lockedMessage": "Requires Staff Keycard"
+    },
+
+    { "type": "light", "id": "CorridorLight1", "lightType": "point", "position": [0, 3.2, -2],  "color": [0.70, 0.70, 0.65], "intensity": 0.25, "range": 12 },
+    { "type": "light", "id": "CorridorLight2", "lightType": "point", "position": [0, 3.2, -8],  "color": [0.55, 0.55, 0.50], "intensity": 0.20, "range": 10 },
+    { "type": "light", "id": "CorridorLight3", "lightType": "point", "position": [0, 3.2, -14], "color": [0.70, 0.70, 0.65], "intensity": 0.22, "range": 12 },
+    { "type": "light", "id": "FlickerLight",   "lightType": "point", "position": [0, 3.2, -5],  "color": [0.80, 0.72, 0.30], "intensity": 0.18, "range": 8 },
+
+    { "type": "trigger", "id": "Trigger_MansionOffice", "position": [0, 1.7, -18], "scale": [4, 3, 1], "targetScene": "mansion_office", "sceneName": "Mansion Office" }
+  ]
+}

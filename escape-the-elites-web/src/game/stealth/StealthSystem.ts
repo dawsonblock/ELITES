@@ -183,16 +183,39 @@ export class StealthSystem {
   }
 }
 
-/** Simple waypoint patrol enemy. Moves between waypoints, has vision cone and hearing radius. */
+/** FSM guard with Patrol → Investigate → Alert → ReturnToPatrol states. */
 export class PatrolEnemy {
   entity: pc.Entity;
   private waypoints: pc.Vec3[];
   private waypointIndex = 0;
-  private moveSpeed = 1.6;
-  private investigateTimer = 0;
   private readonly visionRange: number;
   private readonly visionAngle: number;
   private readonly hearingRange: number;
+
+  // FSM state
+  private _state: 'patrol' | 'investigate' | 'alert' | 'returnToPatrol' = 'patrol';
+
+  // Speeds
+  private readonly PATROL_SPEED = 1.8;
+  private readonly INVESTIGATE_SPEED = 2.4;
+
+  // Timers
+  private _waypointPauseTimer = 0;    // pause at waypoint in patrol
+  private _investigateTimer = 0;      // how long we've been investigating
+  private _alertTimer = 0;            // how long we've been in alert
+
+  // Detection thresholds
+  private readonly INVESTIGATE_THRESHOLD = 25; // detection value to trigger investigate
+  private readonly DETECTED_THRESHOLD = 100;   // detection value to trigger alert
+
+  // Last-known player position (used in investigate / alert)
+  _lastKnownPlayerPos: pc.Vec3 | null = null;
+
+  // Accumulated time (for sinusoidal look-around in investigate)
+  private _elapsedTime = 0;
+
+  // Vision cone entity reference (for colour updates)
+  private _cone: pc.Entity;
 
   constructor(
     app: pc.Application,
@@ -230,30 +253,21 @@ export class PatrolEnemy {
     coneMat.update();
     (cone.render as any).material = coneMat;
     this.entity.addChild(cone);
+    this._cone = cone;
   }
 
-  update(dt: number) {
-    if (this.waypoints.length < 2) return;
-    if (this.investigateTimer > 0) {
-      this.investigateTimer -= dt;
-      return;
-    }
+  // ─── helpers ──────────────────────────────────────────────────────────────
 
-    const target = this.waypoints[this.waypointIndex];
+  /** Move the entity toward `target` at `speed`. Returns true when arrived. */
+  private _moveTo(target: pc.Vec3, speed: number, dt: number): boolean {
     const pos = this.entity.getPosition();
     const diff = target.clone().sub(pos);
     diff.y = 0;
     const dist = diff.length();
-
-    if (dist < 0.3) {
-      // Reached waypoint — pause briefly then move to next
-      this.investigateTimer = 1.2 + Math.random() * 0.8;
-      this.waypointIndex = (this.waypointIndex + 1) % this.waypoints.length;
-      return;
-    }
+    if (dist < 0.3) return true;
 
     const dir = diff.normalize();
-    const step = dir.clone().mulScalar(this.moveSpeed * dt);
+    const step = dir.clone().mulScalar(speed * dt);
     const newPos = pos.clone().add(step);
     newPos.y = target.y;
     this.entity.setPosition(newPos.x, newPos.y, newPos.z);
@@ -261,15 +275,193 @@ export class PatrolEnemy {
     // Face direction of travel
     const angle = Math.atan2(dir.x, dir.z) * (180 / Math.PI);
     this.entity.setLocalEulerAngles(0, angle, 0);
+    return false;
+  }
+
+  /** Find index of the waypoint nearest to `pos`. */
+  private _nearestWaypointIndex(pos: pc.Vec3): number {
+    let best = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < this.waypoints.length; i++) {
+      const d = this.waypoints[i].distance(pos);
+      if (d < bestDist) { bestDist = d; best = i; }
+    }
+    return best;
+  }
+
+  /** Update the vision cone colour to reflect current FSM state. */
+  private _updateConeColor() {
+    const cone = this._cone;
+    if (!cone?.render) return;
+    const mat = (cone.render as any).material as pc.StandardMaterial;
+    switch (this._state) {
+      case 'patrol':
+        mat.diffuse = CONE_COLOR_SAFE;
+        mat.opacity = CONE_OPACITY_SAFE;
+        break;
+      case 'investigate':
+        mat.diffuse = CONE_COLOR_SUSPICIOUS;
+        mat.opacity = CONE_OPACITY_SUSPICIOUS;
+        break;
+      case 'alert':
+      case 'returnToPatrol':
+        mat.diffuse = CONE_COLOR_DETECTING;
+        mat.opacity = CONE_OPACITY_DETECTING;
+        break;
+    }
+    mat.update();
+  }
+
+  /** Transition to a new state, emit bark, update cone colour. */
+  private _transition(next: 'patrol' | 'investigate' | 'alert' | 'returnToPatrol') {
+    if (this._state === next) return;
+    const prev = this._state;
+    this._state = next;
+
+    // Bark text
+    if (prev === 'patrol' && next === 'investigate') {
+      eventBus.emit(GameEvents.SYSTEM_MESSAGE, "Guard: I heard something...");
+    } else if (prev === 'investigate' && next === 'alert') {
+      eventBus.emit(GameEvents.SYSTEM_MESSAGE, "Guard: THERE! Initiating lockdown.");
+    } else if (prev === 'alert' && next === 'returnToPatrol') {
+      eventBus.emit(GameEvents.SYSTEM_MESSAGE, "Guard: Searching the area.");
+    } else if (prev === 'returnToPatrol' && next === 'patrol') {
+      eventBus.emit(GameEvents.SYSTEM_MESSAGE, "Guard: Must have been nothing.");
+    }
+
+    // Reset per-state timers
+    if (next === 'investigate') {
+      this._investigateTimer = 0;
+    } else if (next === 'alert') {
+      this._alertTimer = 0;
+    } else if (next === 'returnToPatrol') {
+      // Snap nearest waypoint as return target
+      this.waypointIndex = this._nearestWaypointIndex(this.entity.getPosition());
+    }
+
+    this._updateConeColor();
+  }
+
+  // ─── public API ───────────────────────────────────────────────────────────
+
+  update(dt: number) {
+    if (this.waypoints.length < 2) return;
+    this._elapsedTime += dt;
+
+    const detection = gameState.detectionValue;
+
+    switch (this._state) {
+      // ── PATROL ────────────────────────────────────────────────────────────
+      case 'patrol': {
+        // Check transitions first
+        if (detection >= this.DETECTED_THRESHOLD) {
+          this._transition('alert');
+          break;
+        }
+        if (detection >= this.INVESTIGATE_THRESHOLD) {
+          this._transition('investigate');
+          break;
+        }
+
+        // Pause at waypoint
+        if (this._waypointPauseTimer > 0) {
+          this._waypointPauseTimer -= dt;
+          break;
+        }
+
+        const target = this.waypoints[this.waypointIndex];
+        const arrived = this._moveTo(target, this.PATROL_SPEED, dt);
+        if (arrived) {
+          this._waypointPauseTimer = 1.2 + Math.random() * 0.8;
+          this.waypointIndex = (this.waypointIndex + 1) % this.waypoints.length;
+        }
+        break;
+      }
+
+      // ── INVESTIGATE ───────────────────────────────────────────────────────
+      case 'investigate': {
+        this._investigateTimer += dt;
+
+        // Transition to alert if fully detected
+        if (detection >= this.DETECTED_THRESHOLD) {
+          this._transition('alert');
+          break;
+        }
+
+        // Give up after 6 seconds
+        if (this._investigateTimer > 6) {
+          this._transition('returnToPatrol');
+          break;
+        }
+
+        // Move toward last-known position if we have one
+        if (this._lastKnownPlayerPos) {
+          this._moveTo(this._lastKnownPlayerPos, this.INVESTIGATE_SPEED, dt);
+        }
+
+        // Sinusoidal look-around: modulate Y rotation
+        const lookYaw = Math.sin(this._elapsedTime * 1.8) * 45;
+        const cur = this.entity.getLocalEulerAngles();
+        this.entity.setLocalEulerAngles(cur.x, cur.y + lookYaw * dt * 2, cur.z);
+        break;
+      }
+
+      // ── ALERT ─────────────────────────────────────────────────────────────
+      case 'alert': {
+        this._alertTimer += dt;
+
+        // Stay at last-known position (already there or close) — no movement
+        // Trigger lockdown (idempotent via gameState guard)
+        if (gameState.alert !== "full_lockdown") {
+          gameState.setAlert("full_lockdown");
+          eventBus.emit(GameEvents.ALERT_CHANGED, "full_lockdown");
+          eventBus.emit(GameEvents.LOCKDOWN_TRIGGERED);
+          gameState.lockdown = true;
+        }
+
+        if (this._alertTimer > 4) {
+          this._transition('returnToPatrol');
+        }
+        break;
+      }
+
+      // ── RETURN TO PATROL ──────────────────────────────────────────────────
+      case 'returnToPatrol': {
+        // Check if detection spiked again
+        if (detection >= this.DETECTED_THRESHOLD) {
+          this._transition('alert');
+          break;
+        }
+        if (detection >= this.INVESTIGATE_THRESHOLD) {
+          this._transition('investigate');
+          break;
+        }
+
+        const target = this.waypoints[this.waypointIndex];
+        const arrived = this._moveTo(target, this.PATROL_SPEED, dt);
+        if (arrived) {
+          this._transition('patrol');
+        }
+        break;
+      }
+    }
+
+    this._updateConeColor();
   }
 
   getDetectionContribution(playerPos: pc.Vec3, hidingMult: number, dt: number): number {
     const pos = this.entity.getPosition();
     const dist = pos.distance(playerPos);
 
-    // Hearing — within radius, always contributing
-    if (dist < this.hearingRange && inputManager.isActive("sprint")) {
-      const factor = 1 - dist / this.hearingRange;
+    // Hearing — proximity-based noise check.
+    // Sprinting generates noise; use stance multiplier.
+    const stanceMult = inputManager.isActive("sprint") ? 1.0 : 0.3;
+    const noiseStrength = inputManager.isActive("sprint") ? 1.0 : 0.0;
+    const effectiveHearingDist = this.hearingRange * noiseStrength * stanceMult;
+    if (effectiveHearingDist > 0 && dist < effectiveHearingDist) {
+      const factor = 1 - dist / effectiveHearingDist;
+      // Store last-known for FSM use
+      this._lastKnownPlayerPos = playerPos.clone();
       return factor * hidingMult * dt * 15;
     }
 
@@ -284,7 +476,14 @@ export class PatrolEnemy {
     const angleFactor = 1 - angle / this.visionAngle;
     let mod = hidingMult;
     if (inputManager.isActive("crouch")) mod *= 0.35;
-    return distFactor * angleFactor * mod * dt * 30;
+    const contrib = distFactor * angleFactor * mod * dt * 30;
+
+    // Update last-known if we can see the player
+    if (contrib > 0) {
+      this._lastKnownPlayerPos = playerPos.clone();
+    }
+
+    return contrib;
   }
 
   destroy() {

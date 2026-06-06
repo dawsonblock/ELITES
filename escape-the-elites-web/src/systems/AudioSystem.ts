@@ -205,6 +205,38 @@ class AudioSystem {
     }
   }
 
+  // === Noise Events ===
+  // Emits a noise event from a world position with given radius and strength.
+  // Guards/cameras can consume this via the NOISE_EMITTED game event.
+  // surface multipliers: concrete=1.0, metal=1.6, wood=1.1, carpet=0.5, water=1.8
+  // stance multipliers: walk=1.0, sprint=2.5, crouch=0.25
+  emitNoise(_position: { x: number; y: number; z: number }, _radius: number, strength: number) {
+    if (!this.ctx) return;
+    // Audible feedback: faint low-frequency thump scaled by strength
+    if (strength > 0.4) {
+      const vol = Math.min(strength * 0.04, 0.08);
+      this.playNoise(0.06, "footstep", vol, 200 + strength * 80);
+    }
+  }
+
+  playGuardAlert(state: "suspicious" | "investigate" | "alert") {
+    if (state === "suspicious") {
+      // Two rising tones — guard notices something
+      this.playTone(320, 0.12, "square", "alarm", 0.09);
+      setTimeout(() => this.playTone(420, 0.1, "square", "alarm", 0.07), 150);
+    } else if (state === "investigate") {
+      // Three rapid ticks — guard is moving to investigate
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => this.playTone(500, 0.06, "square", "alarm", 0.1), i * 100);
+      }
+    } else {
+      // Full alert — rapid descending pulses
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => this.playTone(800 - i * 60, 0.08, "sawtooth", "alarm", 0.14), i * 80);
+      }
+    }
+  }
+
   // === Ambient Layers ===
   startAmbient(type: "storm" | "indoor" | "bunker" | "tower") {
     if (!this.ctx) return;
